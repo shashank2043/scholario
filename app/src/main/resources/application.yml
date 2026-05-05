@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: scholario
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/scholario
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+    defer-datasource-initialization: true
+
+  graphql:
+    path: /graphql
+    servlet:
+      mapping: /graphql
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.scholario: DEBUG
