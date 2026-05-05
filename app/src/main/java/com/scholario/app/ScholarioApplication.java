@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.scholario.app", "com.scholario.book"})
-@EnableJpaRepositories(basePackages = {"com.scholario.book.repository"})
-@EntityScan(basePackages = {"com.scholario.book.model"})
+@ComponentScan(basePackages = {"com.scholario"})
+@EnableJpaRepositories(basePackages = {"com.scholario"})
+@EntityScan(basePackages = {"com.scholario"})
 public class ScholarioApplication {
 
     public static void main(String[] args) {
