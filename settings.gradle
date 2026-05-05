@@ -1,1 +1,4 @@
-rootProject.name = 'parent'
+rootProject.name = 'scholario'
+
+include 'scholario-book-module'
+include 'app'
