@@ -3,6 +3,12 @@ type Query {
     searchBooks(title: String, isbn: String): [Book]
     getBooksByFaculty(facultyId: ID!): [Book]
     getBookVersions(bookId: ID!): [Book]
+
+    # User Queries
+    getUserById(id: ID!): User
+    getFacultyList: [User]
+    getStudentList: [User]
+    getDepartments: [Department]
 }
 
 type Mutation {
@@ -12,10 +18,50 @@ type Mutation {
     publishBook(id: ID!): Book
     archiveBook(id: ID!): Book
     versionBook(input: BookVersionInput!): Book
+
+    # User Mutations
+    registerUser(input: UserInput!): User
+    updateUserProfile(id: ID!, input: ProfileInput!): User
+    assignRole(userId: ID!, role: Role!): User
+    linkFacultyToDepartment(facultyId: ID!, departmentId: ID!): User
+}
+
+type User {
+    id: ID
+    username: String
+    email: String
+    fullName: String
+    role: Role
+    department: Department
+    createdAt: String
+    updatedAt: String
+}
+
+type Department {
+    id: ID
+    name: String
+    code: String
+}
+
+enum Role {
+    ADMIN
+    FACULTY
+    STUDENT
+}
+
+input UserInput {
+    username: String!
+    email: String!
+    fullName: String!
+    role: Role!
+}
+
+input ProfileInput {
+    fullName: String
+    email: String
 }
 
 type Book {
-    id: ID
     title: String
     isbn: String
     facultyId: ID
