@@ -5,6 +5,8 @@ plugins {
 
 dependencies {
     implementation project(':scholario-book-module')
+    implementation project(':scholario-user-module')
+    implementation project(':scholario-reserve-module')
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-graphql'

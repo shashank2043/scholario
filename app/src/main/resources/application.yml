@@ -2,6 +2,10 @@ spring:
   application:
     name: scholario
 
+  threads:
+    virtual:
+      enabled: true
+
   datasource:
     url: jdbc:postgresql://localhost:5432/scholario
     username: postgres
