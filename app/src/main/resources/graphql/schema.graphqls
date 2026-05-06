@@ -17,6 +17,10 @@ type Query {
     getCoursesByFaculty(facultyId: ID!): [Course]
     getCourseMaterials(courseId: ID!): [CourseMaterial]
     getBooksByCourse(courseId: ID!): [Book]
+
+    # Review Queries
+    getReviewStatus(bookId: ID!): ReviewRequest
+    getReviewHistory(bookId: ID!): [ReviewHistory]
 }
 
 type Mutation {
@@ -42,6 +46,31 @@ type Mutation {
     assignBookToCourse(input: CourseMaterialInput!): CourseMaterial
     updateCourseMaterial(id: ID!, mandatory: Boolean): CourseMaterial
     removeBookFromCourse(id: ID!): CourseMaterial
+
+    # Review Mutations
+    submitBookForReview(bookId: ID!, reviewerId: ID): ReviewRequest
+    approveBook(requestId: ID!, feedback: String): ReviewRequest
+    rejectBook(requestId: ID!, feedback: String): ReviewRequest
+    requestChanges(requestId: ID!, feedback: String): ReviewRequest
+}
+
+type ReviewRequest {
+    id: ID
+    bookId: ID
+    reviewerId: ID
+    status: String
+    feedback: String
+    createdAt: String
+    updatedAt: String
+}
+
+type ReviewHistory {
+    id: ID
+    reviewRecordId: ID
+    status: String
+    feedback: String
+    performedBy: ID
+    timestamp: String
 }
 
 type Reservation {

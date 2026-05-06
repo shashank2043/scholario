@@ -9,8 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "reservations", indexes = {
         @Index(name = "idx_reservations_book_id", columnList = "book_id"),
-        @Index(name = "idx_reservations_user_id", columnList = "user_id"),
-        @Index(name = "idx_reservations_status", columnList = "status")
+        @Index(name = "idx_reservations_user_id", columnList = "user_id")
 })
 public class Reservation {
 
@@ -31,7 +30,7 @@ public class Reservation {
     private LocalDateTime expiresAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "status", columnDefinition = "jsonb")
+    @Column(name = "status", columnDefinition = "json")
     private ReservationStatus status;
 
     @PrePersist
