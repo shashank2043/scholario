@@ -22,14 +22,11 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
-
-    public BookService(BookRepository bookRepository, UserRepository userRepository) {
-        this.bookRepository = bookRepository;
-        this.userRepository = userRepository;
     private final NotificationService notificationService;
 
-    public BookService(BookRepository bookRepository, NotificationService notificationService) {
+    public BookService(BookRepository bookRepository, UserRepository userRepository, NotificationService notificationService) {
         this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
         this.notificationService = notificationService;
     }
 
