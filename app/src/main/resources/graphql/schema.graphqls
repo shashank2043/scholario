@@ -3,6 +3,11 @@ type Query {
     searchBooks(title: String, isbn: String): [Book]
     getBooksByFaculty(facultyId: ID!): [Book]
     getBookVersions(bookId: ID!): [Book]
+
+    getCourseById(id: ID!): Course
+    getCoursesByFaculty(facultyId: ID!): [Course]
+    getCourseMaterials(courseId: ID!): [CourseMaterial]
+    getBooksByCourse(courseId: ID!): [Book]
 }
 
 type Mutation {
@@ -12,6 +17,12 @@ type Mutation {
     publishBook(id: ID!): Book
     archiveBook(id: ID!): Book
     versionBook(input: BookVersionInput!): Book
+
+    createCourse(input: CourseInput!): Course
+    updateCourse(id: ID!, input: CourseInput!): Course
+    assignBookToCourse(input: CourseMaterialInput!): CourseMaterial
+    updateCourseMaterial(id: ID!, mandatory: Boolean): CourseMaterial
+    removeBookFromCourse(id: ID!): CourseMaterial
 }
 
 type Book {
@@ -59,4 +70,36 @@ input BookVersionInput {
     title: String
     isbn: String!
     description: String
+}
+
+type Course {
+    id: ID
+    courseCode: String
+    title: String
+    description: String
+    facultyId: ID
+    createdAt: String
+    updatedAt: String
+}
+
+type CourseMaterial {
+    id: ID
+    courseId: ID
+    bookId: ID
+    mandatory: Boolean
+    createdAt: String
+    updatedAt: String
+}
+
+input CourseInput {
+    courseCode: String!
+    title: String!
+    description: String
+    facultyId: ID
+}
+
+input CourseMaterialInput {
+    courseId: ID!
+    bookId: ID!
+    mandatory: Boolean
 }
