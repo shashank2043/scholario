@@ -10,6 +10,7 @@ dependencies {
     implementation project(':scholario-course-module')
     implementation project(':scholario-lending-module')
     implementation project(':scholario-review-module')
+    implementation project(':scholario-royalty-module')
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-graphql'
