@@ -7,4 +7,6 @@ include 'scholario-reserve-module'
 include 'scholario-course-module'
 include 'scholario-lending-module'
 
+include 'scholario-royalty-module'
+
 include 'scholario-review-module'

@@ -8,8 +8,8 @@ spring:
 
   datasource:
     url: jdbc:mysql://localhost:3306/scholario?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: shashank
-    password: Shashank@123
+    username: scholario
+    password: Scholario@123
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
