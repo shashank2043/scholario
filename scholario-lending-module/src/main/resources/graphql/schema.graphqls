@@ -1,0 +1,86 @@
+extend type Query {
+    getIssuedBooksByUser(userId: ID!): [IssueResponse]
+    getIssueHistory(userId: ID!): [IssueResponse]
+    getDueDates: [IssueResponse]
+}
+
+extend type Mutation {
+    issueBook(input: IssueInput!): IssueRecord
+    returnBook(input: ReturnInput!): IssueRecord
+    renewBook(input: RenewInput!): IssueRecord
+    bulkIssueBooks(input: BulkIssueInput!): [IssueRecord]
+}
+
+type IssueResponse {
+    id: ID
+    bookId: ID
+    userId: ID
+    issueDate: String
+    dueDate: String
+    returnDate: String
+    state: IssueState
+    renewalCount: Int
+    penaltyAmount: Float
+    createdAt: String
+    updatedAt: String
+}
+
+type IssueRecord {
+    id: ID
+    bookId: ID
+    userId: ID
+    issueDate: String
+    dueDate: String
+    returnDate: String
+    state: IssueState
+    renewalCount: Int
+    penaltyAmount: Float
+    createdAt: String
+    updatedAt: String
+}
+
+interface IssueState {
+    type: String
+}
+
+type Requested implements IssueState {
+    type: String
+}
+
+type Issued implements IssueState {
+    issueDate: String
+    dueDate: String
+    type: String
+}
+
+type Returned implements IssueState {
+    returnDate: String
+    penaltyAmount: Float
+    type: String
+}
+
+type Overdue implements IssueState {
+    dueDate: String
+    penaltyAmount: Float
+    type: String
+}
+
+input IssueInput {
+    bookId: ID!
+    userId: ID!
+}
+
+input BulkIssueInput {
+    bookIds: [ID!]!
+    userId: ID!
+}
+
+input RenewInput {
+    issueId: ID!
+    userId: ID!
+}
+
+input ReturnInput {
+    issueId: ID!
+    userId: ID!
+}
