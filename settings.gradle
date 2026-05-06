@@ -6,7 +6,7 @@ include 'scholario-user-module'
 include 'scholario-reserve-module'
 include 'scholario-course-module'
 include 'scholario-lending-module'
-
+include 'scholario-notification-module'
 include 'scholario-royalty-module'
 
 include 'scholario-review-module'

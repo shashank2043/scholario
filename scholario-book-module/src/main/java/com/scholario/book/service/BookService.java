@@ -4,6 +4,8 @@ import com.scholario.book.dto.BookInput;
 import com.scholario.book.dto.BookVersionInput;
 import com.scholario.book.model.*;
 import com.scholario.book.repository.BookRepository;
+import com.scholario.notification.model.NotificationType;
+import com.scholario.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +18,11 @@ import java.util.stream.Collectors;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final NotificationService notificationService;
 
-    public BookService(BookRepository bookRepository) {
+    public BookService(BookRepository bookRepository, NotificationService notificationService) {
         this.bookRepository = bookRepository;
+        this.notificationService = notificationService;
     }
 
     // Queries
@@ -140,7 +144,14 @@ public class BookService {
     }
 
     public Book publishBook(Long id) {
-        return updateBookState(id, new Published());
+        Book book = updateBookState(id, new Published());
+        notificationService.createNotification(
+                NotificationType.BOOK_PUBLISHED,
+                "Book '" + book.getTitle() + "' published successfully",
+                book.getFacultyId(),
+                book.getId()
+        );
+        return book;
     }
 
     public Book archiveBook(Long id) {
