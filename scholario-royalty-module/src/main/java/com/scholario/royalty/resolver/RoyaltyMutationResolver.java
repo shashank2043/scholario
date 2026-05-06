@@ -6,11 +6,13 @@ import com.scholario.royalty.model.RoyaltyRecord;
 import com.scholario.royalty.service.RoyaltyService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.math.BigDecimal;
 
 @Controller
+@PreAuthorize("hasRole('ADMIN')")
 public class RoyaltyMutationResolver {
     private final RoyaltyService royaltyService;
 

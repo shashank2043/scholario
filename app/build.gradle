@@ -6,12 +6,14 @@ plugins {
 dependencies {
     implementation project(':scholario-book-module')
     implementation project(':scholario-user-module')
+    implementation project(':scholario-auth-module')
     implementation project(':scholario-reserve-module')
     implementation project(':scholario-course-module')
     implementation project(':scholario-lending-module')
     implementation project(':scholario-review-module')
     implementation project(':scholario-notification-module')
     implementation project(':scholario-royalty-module')
+    implementation project(':scholario-violation-module')
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-graphql'
@@ -19,6 +21,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.h2database:h2'

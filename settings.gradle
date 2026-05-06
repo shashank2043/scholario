@@ -10,3 +10,5 @@ include 'scholario-notification-module'
 include 'scholario-royalty-module'
 
 include 'scholario-review-module'
+include 'scholario-auth-module'
+include 'scholario-violation-module'

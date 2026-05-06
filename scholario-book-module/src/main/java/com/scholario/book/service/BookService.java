@@ -4,6 +4,9 @@ import com.scholario.book.dto.BookInput;
 import com.scholario.book.dto.BookVersionInput;
 import com.scholario.book.model.*;
 import com.scholario.book.repository.BookRepository;
+import com.scholario.user.model.Role;
+import com.scholario.user.model.User;
+import com.scholario.user.repository.UserRepository;
 import com.scholario.notification.model.NotificationType;
 import com.scholario.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,11 @@ import java.util.stream.Collectors;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final UserRepository userRepository;
+
+    public BookService(BookRepository bookRepository, UserRepository userRepository) {
+        this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
     private final NotificationService notificationService;
 
     public BookService(BookRepository bookRepository, NotificationService notificationService) {
@@ -68,6 +76,14 @@ public class BookService {
     // Mutations
 
     public Book createBook(BookInput input) {
+        // Faculty ownership validation
+        User faculty = userRepository.findById(input.facultyId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + input.facultyId()));
+
+        if (faculty.getRole() != Role.FACULTY) {
+            throw new IllegalArgumentException("User with id " + input.facultyId() + " is not a Faculty member");
+        }
+
         if (bookRepository.findByIsbn(input.isbn()).isPresent()) {
             throw new IllegalArgumentException("Book with ISBN " + input.isbn() + " already exists");
         }

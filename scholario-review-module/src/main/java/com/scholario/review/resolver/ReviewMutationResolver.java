@@ -5,9 +5,11 @@ import com.scholario.review.model.ReviewRecord;
 import com.scholario.review.service.ReviewService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 @Controller
+@PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
 public class ReviewMutationResolver {
 
     private final ReviewService reviewService;

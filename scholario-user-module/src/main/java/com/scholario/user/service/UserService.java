@@ -8,6 +8,7 @@ import com.scholario.user.model.User;
 import com.scholario.user.repository.DepartmentRepository;
 import com.scholario.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public User registerUser(UserInput input) {
@@ -27,6 +29,7 @@ public class UserService {
         user.setEmail(input.email());
         user.setFullName(input.fullName());
         user.setRole(input.role());
+        user.setPassword(passwordEncoder.encode(input.password()));
         return userRepository.save(user);
     }
 

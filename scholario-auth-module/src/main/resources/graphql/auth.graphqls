@@ -1,0 +1,29 @@
+extend type Query {
+    validateToken(token: String!): TokenValidationResponse!
+}
+
+extend type Mutation {
+    login(input: LoginInput!): AuthResponse!
+    refreshToken(refreshToken: String!): AuthResponse!
+    logout: Boolean!
+}
+
+input LoginInput {
+    username: String!
+    password: String!
+}
+
+type AuthResponse {
+    accessToken: String!
+    refreshToken: String!
+    tokenType: String!
+    expiresIn: Int!
+    user: User!
+}
+
+type TokenValidationResponse {
+    valid: Boolean!
+    username: String
+    role: String
+    expiresAt: String
+}
