@@ -36,7 +36,7 @@ public class Book {
     private Long parentBookId;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "state", columnDefinition = "jsonb")
+    @Column(name = "state", columnDefinition = "json")
     private BookState state;
 
     @Column(name = "created_at", nullable = false, updatable = false)
