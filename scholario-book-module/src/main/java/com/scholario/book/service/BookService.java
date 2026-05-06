@@ -7,6 +7,8 @@ import com.scholario.book.repository.BookRepository;
 import com.scholario.user.model.Role;
 import com.scholario.user.model.User;
 import com.scholario.user.repository.UserRepository;
+import com.scholario.notification.model.NotificationType;
+import com.scholario.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,11 @@ public class BookService {
     public BookService(BookRepository bookRepository, UserRepository userRepository) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
+    private final NotificationService notificationService;
+
+    public BookService(BookRepository bookRepository, NotificationService notificationService) {
+        this.bookRepository = bookRepository;
+        this.notificationService = notificationService;
     }
 
     // Queries
@@ -153,7 +160,14 @@ public class BookService {
     }
 
     public Book publishBook(Long id) {
-        return updateBookState(id, new Published());
+        Book book = updateBookState(id, new Published());
+        notificationService.createNotification(
+                NotificationType.BOOK_PUBLISHED,
+                "Book '" + book.getTitle() + "' published successfully",
+                book.getFacultyId(),
+                book.getId()
+        );
+        return book;
     }
 
     public Book archiveBook(Long id) {

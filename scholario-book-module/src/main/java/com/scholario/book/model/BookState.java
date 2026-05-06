@@ -1,18 +1,24 @@
 package com.scholario.book.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = Draft.class, name = "Draft"),
-    @JsonSubTypes.Type(value = Review.class, name = "Review"),
-    @JsonSubTypes.Type(value = Published.class, name = "Published"),
-    @JsonSubTypes.Type(value = Archived.class, name = "Archived")
+    @JsonSubTypes.Type(value = Draft.class, name = "DRAFT"),
+    @JsonSubTypes.Type(value = Review.class, name = "REVIEW"),
+    @JsonSubTypes.Type(value = Published.class, name = "PUBLISHED"),
+    @JsonSubTypes.Type(value = Archived.class, name = "ARCHIVED")
 })
 public sealed interface BookState permits Draft, Review, Published, Archived {
 
     String name();
+
+    @JsonIgnore
+    default String getType() {
+        return name();
+    }
 
     default boolean canTransitionTo(BookState newState) {
         return switch (this) {
