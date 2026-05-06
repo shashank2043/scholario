@@ -21,6 +21,11 @@ type Query {
     # Review Queries
     getReviewStatus(bookId: ID!): ReviewRequest
     getReviewHistory(bookId: ID!): [ReviewHistory]
+
+    # Notification Queries
+    getNotificationsByUser(userId: ID!): [Notification]
+    getUnreadNotifications(userId: ID!): [Notification]
+    getUnreadNotificationCount(userId: ID!): Int
 }
 
 type Mutation {
@@ -52,6 +57,18 @@ type Mutation {
     approveBook(requestId: ID!, feedback: String): ReviewRequest
     rejectBook(requestId: ID!, feedback: String): ReviewRequest
     requestChanges(requestId: ID!, feedback: String): ReviewRequest
+
+    # Notification Mutations
+    markNotificationAsRead(id: ID!): Notification
+    markAllNotificationsAsRead(userId: ID!): Boolean
+}
+
+type Subscription {
+    bookPublished: Notification
+    bookIssued: Notification
+    dueDateReminder: Notification
+    reservationAvailable: Notification
+    notificationsByType(type: String!): Notification
 }
 
 type ReviewRequest {
@@ -123,6 +140,7 @@ input ProfileInput {
 }
 
 type Book {
+    id: ID
     title: String
     isbn: String
     facultyId: ID
@@ -198,4 +216,14 @@ input CourseMaterialInput {
     courseId: ID!
     bookId: ID!
     mandatory: Boolean
+}
+
+type Notification {
+    id: ID
+    type: String
+    message: String
+    userId: ID
+    relatedEntityId: ID
+    read: Boolean
+    createdAt: String
 }
