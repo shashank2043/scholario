@@ -13,6 +13,10 @@ type Query {
     # Reservation Queries
     getReservationQueue(bookId: ID!): [Reservation]
     getUserReservations(userId: ID!): [Reservation]
+    getCourseById(id: ID!): Course
+    getCoursesByFaculty(facultyId: ID!): [Course]
+    getCourseMaterials(courseId: ID!): [CourseMaterial]
+    getBooksByCourse(courseId: ID!): [Book]
 }
 
 type Mutation {
@@ -33,6 +37,11 @@ type Mutation {
     reserveBook(input: ReservationInput!): Reservation
     cancelReservation(reservationId: ID!): Reservation
     allocateReservedBook(bookId: ID!): Reservation
+    createCourse(input: CourseInput!): Course
+    updateCourse(id: ID!, input: CourseInput!): Course
+    assignBookToCourse(input: CourseMaterialInput!): CourseMaterial
+    updateCourseMaterial(id: ID!, mandatory: Boolean): CourseMaterial
+    removeBookFromCourse(id: ID!): CourseMaterial
 }
 
 type Reservation {
@@ -128,4 +137,36 @@ input BookVersionInput {
     title: String
     isbn: String!
     description: String
+}
+
+type Course {
+    id: ID
+    courseCode: String
+    title: String
+    description: String
+    facultyId: ID
+    createdAt: String
+    updatedAt: String
+}
+
+type CourseMaterial {
+    id: ID
+    courseId: ID
+    bookId: ID
+    mandatory: Boolean
+    createdAt: String
+    updatedAt: String
+}
+
+input CourseInput {
+    courseCode: String!
+    title: String!
+    description: String
+    facultyId: ID
+}
+
+input CourseMaterialInput {
+    courseId: ID!
+    bookId: ID!
+    mandatory: Boolean
 }

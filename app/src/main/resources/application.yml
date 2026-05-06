@@ -7,17 +7,17 @@ spring:
       enabled: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/scholario
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:mysql://localhost:3306/scholario?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: Nikhil@420
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
     show-sql: true
     defer-datasource-initialization: true
