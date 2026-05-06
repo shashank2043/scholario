@@ -2,5 +2,7 @@ rootProject.name = 'scholario'
 
 include 'scholario-book-module'
 include 'app'
+include 'scholario-user-module'
+include 'scholario-reserve-module'
 include 'scholario-course-module'
 include 'scholario-lending-module'

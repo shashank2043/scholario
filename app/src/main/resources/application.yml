@@ -2,6 +2,10 @@ spring:
   application:
     name: scholario
 
+  threads:
+    virtual:
+      enabled: true
+
   datasource:
     url: jdbc:mysql://localhost:3306/scholario?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
