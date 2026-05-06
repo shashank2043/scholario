@@ -27,6 +27,9 @@ class UserServiceTest {
     @Mock
     private DepartmentRepository departmentRepository;
 
+    @Mock
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private UserService userService;
 
@@ -37,7 +40,7 @@ class UserServiceTest {
 
     @Test
     void testRegisterUser() {
-        UserInput input = new UserInput("testuser","test@example.com","Test User",Role.STUDENT);
+        UserInput input = new UserInput("testuser","test@example.com","Test User","password",Role.STUDENT);
 
         User user = new User();
         user.setId(1L);
@@ -46,6 +49,7 @@ class UserServiceTest {
         user.setFullName(input.fullName());
         user.setRole(input.role());
 
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         User registeredUser = userService.registerUser(input);

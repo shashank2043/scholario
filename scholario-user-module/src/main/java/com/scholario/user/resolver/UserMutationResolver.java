@@ -8,6 +8,7 @@ import com.scholario.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -22,16 +23,19 @@ public class UserMutationResolver {
     }
 
     @MutationMapping
+    @PreAuthorize("isAuthenticated()")
     public User updateUserProfile(@Argument Long id, @Argument ProfileInput input) {
         return userService.updateUserProfile(id, input);
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public User assignRole(@Argument Long userId, @Argument Role role) {
         return userService.assignRole(userId, role);
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public User linkFacultyToDepartment(@Argument Long facultyId, @Argument Long departmentId) {
         return userService.linkFacultyToDepartment(facultyId, departmentId);
     }

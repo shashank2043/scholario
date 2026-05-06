@@ -1,24 +1,104 @@
-# Project Guidelines & Mandates
+# Scholario Project Guidelines & Mandates
 
-> **Note:** These instructions take precedence over `requirments.md` and any other module-specific documentation.
+## Core Technology Stack
+- **Java Version:** Java 25 (Toolchain), implementing **Java 21 language features**.
+- **Framework:** Spring Boot 4.0.6 with Spring GraphQL.
+- **Database:** **MySQL 8.4+** (Relational).
+  - Use `json` column definitions for persisting state/objects.
+  - Hibernate Dialect: `org.hibernate.dialect.MySQLDialect`.
+- **Build Tool:** Gradle (Multi-module).
+- **Security:** OAuth 2.0 with JWT (Spring Security).
 
-## Core Technology Stack Overrides
-- **Database:** Use **MySQL 8.4+** exclusively. All references to PostgreSQL should be ignored.
-  - Use `json` column definition instead of `jsonb`.
-  - Avoid PostgreSQL-specific extensions or types.
-- **Java Version:** Use **Java 25** for the build toolchain and execution environment.
-- **Coding Standards:** Strictly limit implementation to **Java 21 language features**.
-  - **Mandatory Java 21 Features:** Records, Sealed Classes, Pattern Matching for `switch`, Virtual Threads.
-  - **Restriction:** Do not use language features or APIs introduced in Java 22, 23, 24, or 25 (e.g., avoid preview features unless explicitly requested).
+## Architectural Patterns
+- **GraphQL First:** All business logic exposed via GraphQL Queries and Mutations.
+- **Sealed Classes:** Used for state machines across modules (BookState, IssueState, ReviewStatus, etc.).
+- **Persistence:** Hibernate `@JdbcTypeCode(SqlTypes.JSON)` for persisting Sealed Class hierarchies in MySQL.
+- **Event-Driven:** Spring `ApplicationEventPublisher` for cross-module decoupled communication (e.g., Access Violations).
+- **Concurrency:** Virtual Threads enabled (`spring.threads.virtual.enabled=true`).
+- **Global Exception Handling:** `@ControllerAdvice` with `@GraphQlExceptionHandler` mapping exceptions (IllegalArgument, AccessDenied, etc.) to GraphQL `ErrorType` (BAD_REQUEST, FORBIDDEN, etc.).
+
+## Security & Role-Based Access Control (RBAC)
+All GraphQL resolvers must implement method-level security using `@PreAuthorize`.
+
+### Role Hierarchy & Responsibilities:
+- **`ADMIN`**: Full system access, financial management (royalties), security monitoring, and surgical data deletion.
+- **`FACULTY`**: Authorial control over books, course materials, and the review process.
+- **`LIBRARIAN`**: Circulation management (lending), catalog maintenance (publish/archive), and reservation allocation.
+- **`STUDENT`**: Consumption of resources, self-service reservations, and profile management.
+
+### Implementation Patterns:
+- **Resource Creation/Editing**: Restricted to the owner role (e.g., `FACULTY` for books) or `ADMIN`.
+  - `@PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")`
+- **Catalog/Status Management**: Shared between owners and catalog staff.
+  - `@PreAuthorize("hasAnyRole('FACULTY', 'LIBRARIAN', 'ADMIN')")`
+- **Circulation/Operations**: Restricted to staff roles.
+  - `@PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")`
+- **Sensitive/System Actions**: Restricted to administrators.
+  - `@PreAuthorize("hasRole('ADMIN')")`
+- **Self-Service**: Open to all authenticated users or specific roles.
+  - `@PreAuthorize("hasAnyRole('STUDENT', 'LIBRARIAN', 'ADMIN')")`
+
+> **Mandate:** Any mutation that deletes records must be restricted exclusively to `ADMIN`.
 
 ## Module Implementation Status
-- **Module 8 (Review Module):** Completed.
-  - Uses Sealed Classes for `ReviewStatus`.
-  - Persists status as JSON in MySQL.
-  - Decoupled from `BookService` via targeted state transition methods.
 
-## Architectural Requirements
-- **Multi-Module Gradle:** Maintain the current subproject structure.
-- **GraphQL First:** All business logic must be exposed via GraphQL Queries and Mutations.
-- **Persistence:** Use Spring Data JPA with Hibernate. Ensure column definitions are compatible with MySQL 8.4.
-- **Concurrency:** Leverage Virtual Threads for performance-critical operations (reservations, concurrent access).
+### Module 1: Faculty Books (`scholario-book-module`)
+- **Status:** Completed.
+- **State Machine:** `BookState` (Sealed: DRAFT, REVIEW, PUBLISHED, ARCHIVED).
+- **Features:** 
+  - ISBN uniqueness and versioning control.
+  - **Role-Based Access:** Mutations restricted to `FACULTY` and `ADMIN` (Librarians can also publish/archive).
+  - **Faculty Ownership Validation:** `createBook` verifies the associated `facultyId` belongs to a user with the `FACULTY` role.
+  - **Surgical Deletion:** Only `ADMIN` can delete book records.
+
+### Module 2: Users & Faculty (`scholario-user-module`)
+- **Status:** Completed.
+- **Roles:** ADMIN, FACULTY, STUDENT, LIBRARIAN.
+- **Features:** Academic hierarchy (Departments), User registration, Role assignment.
+
+### Module 3: Courses (`scholario-course-module`)
+- **Status:** Completed.
+- **Features:** Course material mapping (Mandatory/Optional), Faculty-course linking.
+
+### Module 4: Lending (`scholario-lending-module`)
+- **Status:** Completed.
+- **State Machine:** `IssueState` (Sealed: REQUESTED, ISSUED, RETURNED, OVERDUE).
+- **Features:** 
+  - Lending history, due dates, return processing.
+  - **Role-Based Access:** Managed by `LIBRARIAN` and `ADMIN`.
+
+### Module 5: Reservations (`scholario-reserve-module`)
+- **Status:** Completed.
+- **State Machine:** `ReservationStatus` (Sealed: PENDING, ALLOCATED, CANCELLED, EXPIRED).
+- **Features:** 
+  - FIFO queueing, allocation logic.
+  - **Role-Based Access:** Students can reserve/cancel; `LIBRARIAN` and `ADMIN` can allocate.
+
+### Module 7: Licensing & Royalties (`scholario-royalty-module`)
+- **Status:** Completed.
+- **Features:** Royalty policies, percentage-based calculations, payout records.
+
+### Module 8: Approval & Review (`scholario-review-module`)
+- **Status:** Completed.
+- **State Machine:** `ReviewStatus` (Sealed: PENDING, APPROVED, REJECTED, CHANGES_REQUESTED).
+- **Features:** Feedback loops, multi-level review history.
+
+### Module 10: Violation Detection (`scholario-violation-module`)
+- **Status:** Completed.
+- **Features:** 
+  - `AccessLog` tracking (success/failure).
+  - `ViolationReport` generation (UNAUTHORIZED_ACCESS, ACCESS_ABUSE).
+  - Automatic detection of brute-force/unauthorized access (threshold-based).
+  - Decoupled via `AccessDeniedEvent`.
+
+### Module 11: Authentication (`scholario-auth-module`)
+- **Status:** Completed.
+- **Features:** JWT generation/validation, password encoding (BCrypt), Login/Token refresh.
+
+## Project Metadata
+- **Project Name:** Scholario
+- **Base Package:** `com.scholario`
+- **Port:** 8080
+- **Database Name:** `scholario`
+- **GraphQL Endpoint:** `/graphql`
+- **GraphiQL:** Enabled

@@ -9,11 +9,13 @@ import com.scholario.course.model.CourseMaterial;
 import com.scholario.course.service.CourseService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.util.stream.Collectors;
 
 @Controller
+@PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
 public class CourseMutationResolver {
 
     private final CourseService courseService;

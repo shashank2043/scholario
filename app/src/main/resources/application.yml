@@ -23,7 +23,11 @@ spring:
     defer-datasource-initialization: true
 
   graphql:
+    graphiql:
+      enabled: true
     path: /graphql
+    schema:
+      locations: "classpath*:graphql/**/"
     servlet:
       mapping: /graphql
 

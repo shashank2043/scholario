@@ -7,6 +7,7 @@ import com.scholario.book.service.BookService;
 import graphql.schema.DataFetchingEnvironment;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -19,31 +20,37 @@ public class BookMutationResolver {
     }
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
     public Book createBook(@Argument BookInput input) {
         return bookService.createBook(input);
     }
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
     public Book updateBook(@Argument Long id,@Argument BookInput input) {
         return bookService.updateBook(id, input);
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Book deleteBook(@Argument Long id) {
         return bookService.deleteBook(id);
     }
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN', 'LIBRARIAN')")
     public Book publishBook(@Argument Long id) {
         return bookService.publishBook(id);
     }
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN', 'LIBRARIAN')")
     public Book archiveBook(@Argument Long id) {
         return bookService.archiveBook(id);
     }
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
     public Book versionBook(@Argument BookVersionInput input) {
         return bookService.versionBook(input);
     }

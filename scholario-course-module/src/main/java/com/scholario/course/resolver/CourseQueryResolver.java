@@ -8,6 +8,7 @@ import com.scholario.course.model.CourseMaterial;
 import com.scholario.course.service.CourseService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
+@PreAuthorize("isAuthenticated()")
 public class CourseQueryResolver {
 
     private final CourseService courseService;
