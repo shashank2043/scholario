@@ -1,12 +1,7 @@
-plugins {
-    id 'org.springframework.boot' version '4.0.6' apply false
-    id 'io.spring.dependency-management'
-}
-
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-graphql'
-    implementation 'org.postgresql:postgresql'
+    runtimeOnly 'com.mysql:mysql-connector-j'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     

@@ -109,7 +109,7 @@ public class BookService {
         return book;
     }
 
-    public Book publishBook(Long id) {
+    public Book submitForReview(Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Book not found with id: " + id));
 
@@ -122,10 +122,25 @@ public class BookService {
             throw new IllegalStateException("Cannot transition from " + currentState.name() + " to REVIEW");
         }
 
-        // After review, publish (simulated - in real app this would be a separate review workflow)
-        book.setState(new Published());
+        return bookRepository.save(book);
+    }
+
+    public Book updateBookState(Long id, BookState newState) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Book not found with id: " + id));
+
+        BookState currentState = book.getState();
+        if (currentState.canTransitionTo(newState)) {
+            book.setState(newState);
+        } else {
+            throw new IllegalStateException("Cannot transition from " + currentState.name() + " to " + newState.name());
+        }
 
         return bookRepository.save(book);
+    }
+
+    public Book publishBook(Long id) {
+        return updateBookState(id, new Published());
     }
 
     public Book archiveBook(Long id) {
