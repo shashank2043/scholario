@@ -1,4 +1,4 @@
-package com.scholario.app;
+package com.scholario.app.config;
 
 import org.springframework.graphql.server.WebGraphQlInterceptor;
 import org.springframework.graphql.server.WebGraphQlRequest;

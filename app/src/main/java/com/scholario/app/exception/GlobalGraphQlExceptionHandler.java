@@ -1,4 +1,4 @@
-package com.scholario.app;
+package com.scholario.app.exception;
 
 import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;

@@ -1,4 +1,4 @@
-package com.scholario.app;
+package com.scholario.app.config;
 
 import com.scholario.auth.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;

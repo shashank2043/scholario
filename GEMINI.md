@@ -74,6 +74,14 @@ All GraphQL resolvers must implement method-level security using `@PreAuthorize`
   - FIFO queueing, allocation logic.
   - **Role-Based Access:** Students can reserve/cancel; `LIBRARIAN` and `ADMIN` can allocate.
 
+### Module 6: Digital Content Access (`scholario-content-module`)
+- **Status:** Completed.
+- **Features:** 
+  - Uploading digital content linked to books.
+  - Role-based access control and DRM enforcement.
+  - Access logging (VIEW, DOWNLOAD).
+  - **Role-Based Access:** `FACULTY` can upload; `LIBRARIAN` and `ADMIN` manage access; All users can access if granted.
+
 ### Module 7: Licensing & Royalties (`scholario-royalty-module`)
 - **Status:** Completed.
 - **Features:** Royalty policies, percentage-based calculations, payout records.

@@ -1,4 +1,4 @@
-package com.scholario.app;
+package com.scholario.app.config;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLFieldDefinition;
