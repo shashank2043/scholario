@@ -125,4 +125,98 @@ class ReservationServiceTest {
         
         verify(reservationRepository).save(argThat(r -> r.getId().equals(1L) && r.getStatus() instanceof Expired));
     }
+
+    @Test
+    void testCancelReservation_NotFound() {
+        Long reservationId = 999L;
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> reservationService.cancelReservation(reservationId));
+        verify(reservationRepository, never()).save(any(Reservation.class));
+    }
+
+    @Test
+    void testCancelReservation_NotPending() {
+        Long reservationId = 1L;
+        Reservation reservation = new Reservation();
+        reservation.setId(reservationId);
+        reservation.setStatus(new Allocated());
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+
+        assertThrows(RuntimeException.class, () -> reservationService.cancelReservation(reservationId));
+        verify(reservationRepository, never()).save(any(Reservation.class));
+    }
+
+    @Test
+    void testAllocateReservedBook_NoReservations() {
+        Long bookId = 1L;
+        when(reservationRepository.findByBookIdOrderByReservedAtAsc(bookId)).thenReturn(Collections.emptyList());
+
+        Reservation result = reservationService.allocateReservedBook(bookId);
+
+        assertNull(result);
+        verify(reservationRepository, never()).save(any(Reservation.class));
+    }
+
+    @Test
+    void testAllocateReservedBook_NoPendingReservations() {
+        Long bookId = 1L;
+        Reservation allocated = new Reservation();
+        allocated.setId(1L);
+        allocated.setStatus(new Allocated());
+
+        when(reservationRepository.findByBookIdOrderByReservedAtAsc(bookId)).thenReturn(Collections.singletonList(allocated));
+
+        Reservation result = reservationService.allocateReservedBook(bookId);
+
+        assertNull(result);
+    }
+
+    @Test
+    void testGetReservationQueue() {
+        Long bookId = 1L;
+        Reservation pending1 = new Reservation();
+        pending1.setId(1L);
+        pending1.setStatus(new Pending());
+        pending1.setReservedAt(LocalDateTime.now().minusHours(2));
+
+        Reservation allocated = new Reservation();
+        allocated.setId(2L);
+        allocated.setStatus(new Allocated());
+
+        Reservation pending2 = new Reservation();
+        pending2.setId(3L);
+        pending2.setStatus(new Pending());
+        pending2.setReservedAt(LocalDateTime.now().minusHours(1));
+
+        when(reservationRepository.findByBookIdOrderByReservedAtAsc(bookId)).thenReturn(Arrays.asList(pending1, allocated, pending2));
+
+        List<Reservation> queue = reservationService.getReservationQueue(bookId);
+
+        assertEquals(2, queue.size());
+        assertTrue(queue.get(0).getStatus() instanceof Pending);
+        assertTrue(queue.get(1).getStatus() instanceof Pending);
+        assertEquals(1L, queue.get(0).getId());
+        assertEquals(3L, queue.get(1).getId());
+    }
+
+    @Test
+    void testGetUserReservations() {
+        Long userId = 2L;
+        Reservation r1 = new Reservation();
+        r1.setId(1L);
+        r1.setUserId(userId);
+
+        Reservation r2 = new Reservation();
+        r2.setId(2L);
+        r2.setUserId(userId);
+
+        when(reservationRepository.findByUserId(userId)).thenReturn(Arrays.asList(r1, r2));
+
+        List<Reservation> result = reservationService.getUserReservations(userId);
+
+        assertEquals(2, result.size());
+        verify(reservationRepository, times(1)).findByUserId(userId);
+    }
 }

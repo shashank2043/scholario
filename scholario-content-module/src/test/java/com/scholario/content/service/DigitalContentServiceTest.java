@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,5 +92,148 @@ class DigitalContentServiceTest {
         boolean result = digitalContentService.hasAccess(1L, 1L);
 
         assertTrue(result);
+    }
+
+    @Test
+    void hasAccess_ShouldReturnFalse_WhenAccessDoesNotExist() {
+        when(userContentAccessRepository.existsByUserIdAndContentId(1L, 1L)).thenReturn(false);
+
+        boolean result = digitalContentService.hasAccess(1L, 1L);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void getDigitalContent_ShouldReturnContent_WhenFound() {
+        when(digitalContentRepository.findById(1L)).thenReturn(Optional.of(content));
+
+        DigitalContent result = digitalContentService.getDigitalContent(1L);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals(10L, result.getBookId());
+        verify(digitalContentRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void getDigitalContent_ShouldThrowException_WhenNotFound() {
+        when(digitalContentRepository.findById(99L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> digitalContentService.getDigitalContent(99L));
+
+        assertEquals("Digital content not found with id: 99", exception.getMessage());
+        verify(digitalContentRepository, times(1)).findById(99L);
+    }
+
+    @Test
+    void getAccessLogs_ShouldReturnLogsByContentId() {
+        ContentAccessLog log1 = ContentAccessLog.builder()
+                .id(1L)
+                .contentId(1L)
+                .userId(10L)
+                .accessType(ContentAccessType.VIEW)
+                .build();
+
+        when(contentAccessLogRepository.findByContentId(1L)).thenReturn(List.of(log1));
+
+        List<ContentAccessLog> logs = digitalContentService.getAccessLogs(1L);
+
+        assertEquals(1, logs.size());
+        assertEquals(1L, logs.get(0).getContentId());
+        verify(contentAccessLogRepository, times(1)).findByContentId(1L);
+        verify(contentAccessLogRepository, never()).findAll();
+    }
+
+    @Test
+    void getAccessLogs_ShouldReturnAllLogs_WhenContentIdIsNull() {
+        ContentAccessLog log1 = ContentAccessLog.builder()
+                .id(1L)
+                .contentId(1L)
+                .userId(10L)
+                .accessType(ContentAccessType.VIEW)
+                .build();
+        ContentAccessLog log2 = ContentAccessLog.builder()
+                .id(2L)
+                .contentId(2L)
+                .userId(11L)
+                .accessType(ContentAccessType.DOWNLOAD)
+                .build();
+
+        when(contentAccessLogRepository.findAll()).thenReturn(List.of(log1, log2));
+
+        List<ContentAccessLog> logs = digitalContentService.getAccessLogs(null);
+
+        assertEquals(2, logs.size());
+        verify(contentAccessLogRepository, times(1)).findAll();
+        verify(contentAccessLogRepository, never()).findByContentId(anyLong());
+    }
+
+    @Test
+    void revokeAccess_ShouldReturnTrue() {
+        doNothing().when(userContentAccessRepository).deleteByUserIdAndContentId(1L, 1L);
+
+        boolean result = digitalContentService.revokeAccess(1L, 1L);
+
+        assertTrue(result);
+        verify(userContentAccessRepository, times(1)).deleteByUserIdAndContentId(1L, 1L);
+    }
+
+    @Test
+    void logAccess_ShouldSaveAndReturnLog() {
+        ContentAccessLog savedLog = ContentAccessLog.builder()
+                .id(1L)
+                .contentId(1L)
+                .userId(10L)
+                .accessType(ContentAccessType.DOWNLOAD)
+                .build();
+
+        when(contentAccessLogRepository.save(any(ContentAccessLog.class))).thenReturn(savedLog);
+
+        ContentAccessLog result = digitalContentService.logAccess(1L, 10L, ContentAccessType.DOWNLOAD);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getContentId());
+        assertEquals(10L, result.getUserId());
+        assertEquals(ContentAccessType.DOWNLOAD, result.getAccessType());
+        verify(contentAccessLogRepository, times(1)).save(any(ContentAccessLog.class));
+    }
+
+    @Test
+    void grantAccess_ShouldSaveUserContentAccessAndLogAccess() {
+        when(userContentAccessRepository.existsByUserIdAndContentId(1L, 1L)).thenReturn(false);
+        when(userContentAccessRepository.save(any(UserContentAccess.class)))
+                .thenReturn(UserContentAccess.builder().id(1L).userId(1L).contentId(1L).build());
+        when(contentAccessLogRepository.save(any(ContentAccessLog.class)))
+                .thenReturn(ContentAccessLog.builder().id(1L).contentId(1L).userId(1L).accessType(ContentAccessType.VIEW).build());
+
+        ContentAccessLog result = digitalContentService.grantAccess(1L, 1L);
+
+        assertNotNull(result);
+        assertEquals(ContentAccessType.VIEW, result.getAccessType());
+        verify(userContentAccessRepository, times(1)).save(any(UserContentAccess.class));
+        verify(contentAccessLogRepository, times(1)).save(any(ContentAccessLog.class));
+    }
+
+    @Test
+    void uploadDigitalContent_ShouldSetFieldsCorrectly() {
+        DigitalContent savedContent = DigitalContent.builder()
+                .id(1L)
+                .bookId(input.getBookId())
+                .contentType(input.getContentType())
+                .contentUrl(input.getContentUrl())
+                .drmEnforced(input.isDrmEnforced())
+                .build();
+
+        when(digitalContentRepository.save(any(DigitalContent.class))).thenReturn(savedContent);
+
+        DigitalContent result = digitalContentService.uploadDigitalContent(input);
+
+        assertNotNull(result);
+        assertEquals(10L, result.getBookId());
+        assertEquals("PDF", result.getContentType());
+        assertEquals("http://example.com/book.pdf", result.getContentUrl());
+        assertTrue(result.isDrmEnforced());
+        verify(digitalContentRepository, times(1)).save(any(DigitalContent.class));
     }
 }
