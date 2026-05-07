@@ -16,4 +16,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     @Query("SELECT c FROM Course c WHERE c.courseCode = :courseCode OR c.title LIKE %:title%")
     List<Course> searchCourses(@Param("courseCode") String courseCode, @Param("title") String title);
+
+    long countByFacultyId(Long facultyId);
 }

@@ -103,6 +103,23 @@ All GraphQL resolvers must implement method-level security using `@PreAuthorize`
 - **Status:** Completed.
 - **Features:** JWT generation/validation, password encoding (BCrypt), Login/Token refresh.
 
+### Module 12: Academic Usage & Reports (`scholario-analytics-module`)
+- **Status:** Completed.
+- **Features:** 
+  - Aggregation of book usage (issues, reservations, digital access).
+  - Course material statistics (mandatory vs optional).
+  - Faculty performance tracking (authored books, courses taught, engagement).
+  - Student engagement analytics (borrowing habits, content consumption).
+  - **Role-Based Access:** Restricted to `LIBRARIAN`, `ADMIN`, and `FACULTY`.
+
+### Module 13: Recommendation & Optimization (`scholario-recommendation-module`)
+- **Status:** Completed.
+- **Features:** 
+  - Personalized book recommendations based on user history and academic context.
+  - Course material suggestions based on faculty authorship and academic trends.
+  - Resource demand prediction using usage analytics and risk assessment.
+  - **Role-Based Access:** Recommendations for all authenticated users; Predictions/Suggestions for `FACULTY`, `LIBRARIAN`, and `ADMIN`.
+
 ## Project Metadata
 - **Project Name:** Scholario
 - **Base Package:** `com.scholario`

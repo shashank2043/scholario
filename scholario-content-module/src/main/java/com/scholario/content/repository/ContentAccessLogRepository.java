@@ -9,4 +9,8 @@ import java.util.List;
 public interface ContentAccessLogRepository extends JpaRepository<ContentAccessLog, Long> {
     List<ContentAccessLog> findByContentId(Long contentId);
     List<ContentAccessLog> findByUserId(Long userId);
+
+    long countByContentIdIn(List<Long> contentIds);
+
+    long countByUserId(Long userId);
 }
