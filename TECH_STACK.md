@@ -26,15 +26,15 @@ This document provides a comprehensive overview of the technologies, frameworks,
 | **scholario-book-module** | Book/State | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
 | **scholario-course-module** | Course/Maps | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
 | **scholario-lending-module** | Issue/Return| Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
-| **scholario-auth-module** | JWT/Auth | Enabled | JPA/MySQL | No |
-| **scholario-reserve-module**| Reservation | Enabled | JPA/MySQL | No |
-| **scholario-review-module** | Peer Review | Enabled | JPA/MySQL | No |
-| **scholario-royalty-module**| Royalty/Calc| Enabled | JPA/MySQL | No |
-| **scholario-notification**  | Real-time | Enabled | JPA/MySQL | No |
-| **scholario-analytics**     | Aggregation | Enabled | JPA/MySQL | No |
-| **scholario-content**       | Digital/DRM | Enabled | JPA/MySQL | No |
-| **scholario-recommend**     | Suggestions | Enabled | JPA/MySQL | No |
-| **scholario-violation**     | Security/Log| Enabled | JPA/MySQL | No |
+| **scholario-auth-module** | JWT/Auth | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-reserve-module**| Reservation | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-review-module** | Peer Review | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-royalty-module**| Royalty/Calc| Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-notification-module** | Real-time | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-analytics-module**    | Aggregation | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-content-module**      | Digital/DRM | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-recommendation-module**| Suggestions | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-violation-module**    | Security/Log| Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
 
 ---
 
@@ -43,6 +43,6 @@ This document provides a comprehensive overview of the technologies, frameworks,
 - **Java Version:** Java 25 Toolchain targeting Java 21 language features (Virtual Threads, Pattern Matching, Sealed Classes).
 - **Virtual Threads:** Enabled project-wide via `spring.threads.virtual.enabled=true`.
 - **Database:** MySQL 8.4+ for production; H2 used for local testing in the `app` module.
-- **Unit Testing:** JUnit 5 (JUnit Jupiter) and Mockito are used exclusively for the 4 core modules (User, Book, Course, Lending).
+- **Unit Testing:** JUnit 5 (JUnit Jupiter) and Mockito are used across all modules for comprehensive testing of services and GraphQL resolvers.
 - **Lombok:** Used extensively for boilerplate reduction (Getters, Setters, Constructors, Builders).
 - **JSON Persistence:** Sealed class hierarchies are persisted as JSON in MySQL using `@JdbcTypeCode(SqlTypes.JSON)`.

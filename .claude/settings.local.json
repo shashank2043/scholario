@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(./gradlew :scholario-royalty-module:compileJava *)",
-      "Bash(./gradlew :app:compileJava *)"
-    ]
-  }
-}
