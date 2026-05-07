@@ -9,9 +9,11 @@ import com.scholario.user.repository.DepartmentRepository;
 import com.scholario.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -19,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
     @Mock
@@ -28,72 +31,79 @@ class UserServiceTest {
     private DepartmentRepository departmentRepository;
 
     @Mock
-    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
 
+    private User user;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setEmail("test@test.com");
+        user.setFullName("Test User");
+        user.setRole(Role.STUDENT);
     }
 
     @Test
-    void testRegisterUser() {
-        UserInput input = new UserInput("testuser","test@example.com","Test User","password",Role.STUDENT);
-
-        User user = new User();
-        user.setId(1L);
-        user.setUsername(input.username());
-        user.setEmail(input.email());
-        user.setFullName(input.fullName());
-        user.setRole(input.role());
-
-        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+    void registerUser_Success() {
+        UserInput input = new UserInput("testuser", "test@test.com", "Test User", "password", Role.STUDENT);
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         User registeredUser = userService.registerUser(input);
 
         assertNotNull(registeredUser);
         assertEquals("testuser", registeredUser.getUsername());
-        verify(userRepository, times(1)).save(any(User.class));
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
-    void testLinkFacultyToDepartment() {
-        Long facultyId = 1L;
-        Long departmentId = 1L;
+    void updateUserProfile_Success() {
+        ProfileInput input = new ProfileInput("Updated Name", "updated@test.com");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
-        User faculty = new User();
-        faculty.setId(facultyId);
-        faculty.setRole(Role.FACULTY);
+        User updatedUser = userService.updateUserProfile(1L, input);
 
+        assertEquals("Updated Name", updatedUser.getFullName());
+        assertEquals("updated@test.com", updatedUser.getEmail());
+    }
+
+    @Test
+    void assignRole_Success() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        User updatedUser = userService.assignRole(1L, Role.ADMIN);
+
+        assertEquals(Role.ADMIN, updatedUser.getRole());
+    }
+
+    @Test
+    void linkFacultyToDepartment_Success() {
+        user.setRole(Role.FACULTY);
         Department dept = new Department();
-        dept.setId(departmentId);
+        dept.setId(1L);
         dept.setName("Computer Science");
 
-        when(userRepository.findById(facultyId)).thenReturn(Optional.of(faculty));
-        when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(dept));
-        when(userRepository.save(any(User.class))).thenReturn(faculty);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(dept));
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
-        User result = userService.linkFacultyToDepartment(facultyId, departmentId);
+        User linkedUser = userService.linkFacultyToDepartment(1L, 1L);
 
-        assertNotNull(result);
-        assertEquals(dept, result.getDepartment());
-        verify(userRepository, times(1)).save(faculty);
+        assertEquals(dept, linkedUser.getDepartment());
     }
 
     @Test
-    void testLinkNonFacultyToDepartmentThrowsException() {
-        Long studentId = 1L;
-        Long departmentId = 1L;
+    void linkFacultyToDepartment_Failure_NotFaculty() {
+        user.setRole(Role.STUDENT);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        User student = new User();
-        student.setId(studentId);
-        student.setRole(Role.STUDENT);
-
-        when(userRepository.findById(studentId)).thenReturn(Optional.of(student));
-
-        assertThrows(RuntimeException.class, () -> userService.linkFacultyToDepartment(studentId, departmentId));
+        assertThrows(RuntimeException.class, () -> userService.linkFacultyToDepartment(1L, 1L));
     }
 }

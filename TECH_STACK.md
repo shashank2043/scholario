@@ -1,193 +1,48 @@
-# Scholario Technology Stack
+# Scholario Technology Stack Inventory
 
-## Global/Build Level
+This document provides a comprehensive overview of the technologies, frameworks, and library versions used across the Scholario multi-module project.
 
-| Technology | Version |
-| :--- | :--- |
-| Java (JDK) | 25 |
-| Gradle | 9.4.1 |
-| Spring Boot | 4.0.6 |
-| Spring Dependency Management | 1.1.7 |
-| Spring Framework | 6.2.x |
-| Spring GraphQL | 1.3.x |
-| Spring Boot Starter Web | 4.0.6 |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Spring Boot Starter OAuth2 Resource Server | 4.0.6 |
-| Spring Boot Starter WebSocket | 4.0.6 |
-| Spring Boot Starter Test | 4.0.6 |
-| MySQL Connector/J | 9.2.0 |
-| H2 Database | 2.3.x |
-| Hibernate | 6.x |
-| Lombok | 1.18.38 |
-| Jackson Databind | 2.18.x |
-| JUnit Jupiter | 5.11.x |
-| Spring Security Test | 6.4.x |
-| Spring GraphQL Test | 1.3.x |
-| Auth0 Java JWT | 4.4.0 |
+## Core Infrastructure
+
+| Technology | Version | Scope |
+| :--- | :--- | :--- |
+| **Java (JDK)** | 25 (Toolchain) / 21 Features | Global |
+| **Gradle** | 9.4.1 | Global |
+| **Spring Boot** | 4.0.6 | Global (BOM Managed) |
+| **Spring Dependency Management** | 1.1.7 | Global |
+| **Spring Framework** | 6.2.x (via Boot 4.0.6) | Global |
+| **Spring GraphQL** | 1.3.x (via Boot 4.0.6) | Global |
+| **MySQL Connector/J** | Managed by Boot 4.0.6 | Runtime (Persistence) |
+| **Hibernate** | Managed by Boot 4.0.6 | Runtime (Persistence) |
 
 ---
 
-## Module: app
+## Module-Specific Dependencies & Testing
 
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Web | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter OAuth2 Resource Server | 4.0.6 |
-| Spring Boot Starter WebSocket | 4.0.6 |
-| Jackson Databind | 2.18.x |
-| Lombok | 1.18.38 |
-| MySQL Connector/J | 9.2.0 |
-| H2 Database | 2.3.x |
-| Spring Boot Starter Test | 4.0.6 |
-| Spring Boot Starter GraphQL Test | 4.0.6 |
-| scholario-book-module | - |
-| scholario-user-module | - |
-| scholario-auth-module | - |
-| scholario-reserve-module | - |
-| scholario-course-module | - |
-| scholario-lending-module | - |
-| scholario-review-module | - |
-| scholario-notification-module | - |
-| scholario-royalty-module | - |
-| scholario-violation-module | - |
+| Module | Core Logic | GraphQL | Persistence | Unit Testing |
+| :--- | :--- | :--- | :--- | :--- |
+| **app** | Web, Security | Enabled | JPA/MySQL/H2 | No |
+| **scholario-user-module** | User/Role | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-book-module** | Book/State | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-course-module** | Course/Maps | Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-lending-module** | Issue/Return| Enabled | JPA/MySQL | **Yes (Service & Resolver)** |
+| **scholario-auth-module** | JWT/Auth | Enabled | JPA/MySQL | No |
+| **scholario-reserve-module**| Reservation | Enabled | JPA/MySQL | No |
+| **scholario-review-module** | Peer Review | Enabled | JPA/MySQL | No |
+| **scholario-royalty-module**| Royalty/Calc| Enabled | JPA/MySQL | No |
+| **scholario-notification**  | Real-time | Enabled | JPA/MySQL | No |
+| **scholario-analytics**     | Aggregation | Enabled | JPA/MySQL | No |
+| **scholario-content**       | Digital/DRM | Enabled | JPA/MySQL | No |
+| **scholario-recommend**     | Suggestions | Enabled | JPA/MySQL | No |
+| **scholario-violation**     | Security/Log| Enabled | JPA/MySQL | No |
 
 ---
 
-## Module: scholario-book-module
+## Shared Technology Standards
 
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Lombok | 1.18.38 |
-| MySQL Connector/J | 9.2.0 |
-| scholario-user-module | - |
-| scholario-notification-module | - |
-
----
-
-## Module: scholario-lending-module
-
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Lombok | 1.18.38 |
-| MySQL Connector/J | 9.2.0 |
-
----
-
-## Module: scholario-user-module
-
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Lombok | 1.18.38 |
-| MySQL Connector/J | 9.2.0 |
-| Spring Boot Starter Test | 4.0.6 |
-| Spring GraphQL Test | 1.3.x |
-
----
-
-## Module: scholario-auth-module
-
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Web | 4.0.6 |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter OAuth2 Resource Server | 4.0.6 |
-| Auth0 Java JWT | 4.4.0 |
-| Lombok | 1.18.38 |
-| scholario-user-module | - |
-| Spring Boot Starter Test | 4.0.6 |
-| Spring Security Test | 6.4.x |
-
----
-
-## Module: scholario-reserve-module
-
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Lombok | 1.18.38 |
-| MySQL Connector/J | 9.2.0 |
-| Spring Boot Starter Test | 4.0.6 |
-
----
-
-## Module: scholario-course-module
-
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Lombok | 1.18.38 |
-| MySQL Connector/J | 9.2.0 |
-| scholario-book-module | - |
-
----
-
-## Module: scholario-notification-module
-
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Spring Boot Starter WebSocket | 4.0.6 |
-| Lombok | 1.18.38 |
-
----
-
-## Module: scholario-royalty-module
-
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Jackson Databind | 2.18.x |
-| Lombok | 1.18.38 |
-| MySQL Connector/J | 9.2.0 |
-| Spring Boot Starter Test | 4.0.6 |
-
----
-
-## Module: scholario-review-module
-
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Lombok | 1.18.38 |
-| MySQL Connector/J | 9.2.0 |
-| scholario-book-module | - |
-| Spring Boot Starter Test | 4.0.6 |
-
----
-
-## Module: scholario-violation-module
-
-| Dependency | Version |
-| :--- | :--- |
-| Spring Boot Starter Security | 4.0.6 |
-| Spring Boot Starter Data JPA | 4.0.6 |
-| Spring Boot Starter GraphQL | 4.0.6 |
-| Lombok | 1.18.38 |
-| scholario-user-module | - |
-| Spring Boot Starter Test | 4.0.6 |
-| Spring Security Test | 6.4.x |
+- **Java Version:** Java 25 Toolchain targeting Java 21 language features (Virtual Threads, Pattern Matching, Sealed Classes).
+- **Virtual Threads:** Enabled project-wide via `spring.threads.virtual.enabled=true`.
+- **Database:** MySQL 8.4+ for production; H2 used for local testing in the `app` module.
+- **Unit Testing:** JUnit 5 (JUnit Jupiter) and Mockito are used exclusively for the 4 core modules (User, Book, Course, Lending).
+- **Lombok:** Used extensively for boilerplate reduction (Getters, Setters, Constructors, Builders).
+- **JSON Persistence:** Sealed class hierarchies are persisted as JSON in MySQL using `@JdbcTypeCode(SqlTypes.JSON)`.
