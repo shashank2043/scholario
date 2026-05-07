@@ -40,6 +40,7 @@ Business Rules:
 ISBN/unique ID required
 Faculty ownership validation
 Version control mandatory
+
 Cannot modify published content without versioning
 Module 2: Register & Manage Faculty & Students
 Mutations: registerUser, updateUserProfile, assignRole, linkFacultyToDepartment
