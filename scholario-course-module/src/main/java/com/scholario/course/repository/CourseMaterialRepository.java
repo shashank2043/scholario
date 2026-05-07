@@ -19,4 +19,8 @@ public interface CourseMaterialRepository extends JpaRepository<CourseMaterial, 
 
     @Query("SELECT cm.bookId FROM CourseMaterial cm WHERE cm.course.id = :courseId")
     List<Long> findBookIdsByCourseId(@Param("courseId") Long courseId);
+
+    long countByCourseId(Long courseId);
+
+    long countByCourseIdAndMandatory(Long courseId, boolean mandatory);
 }

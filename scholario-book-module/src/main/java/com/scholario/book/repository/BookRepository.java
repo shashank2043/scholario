@@ -19,4 +19,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     @Query("SELECT b FROM Book b WHERE b.parentBookId IS NULL AND b.id = :id OR b.parentBookId = :id")
     List<Book> findBookWithVersions(@Param("id") Long id);
+
+    long countByFacultyId(Long facultyId);
 }

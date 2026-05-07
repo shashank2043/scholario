@@ -21,4 +21,8 @@ public interface IssueRecordRepository extends JpaRepository<IssueRecord, Long> 
     List<IssueRecord> findByDueDateLessThanAndStateType(LocalDateTime now, String stateType);
 
     Optional<IssueRecord> findByIdAndUserId(Long id, Long userId);
+
+    long countByBookId(Long bookId);
+
+    long countByUserId(Long userId);
 }

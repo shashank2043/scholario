@@ -1,0 +1,40 @@
+extend type Query {
+    getDigitalContent(id: ID!): DigitalContent
+    getAccessLogs(contentId: ID): [ContentAccessLog]
+}
+
+extend type Mutation {
+    uploadDigitalContent(input: DigitalContentInput!): DigitalContent
+    grantAccess(contentId: ID!, userId: ID!): ContentAccessLog
+    revokeAccess(contentId: ID!, userId: ID!): Boolean
+}
+
+type DigitalContent {
+    id: ID!
+    bookId: ID!
+    contentType: String!
+    contentUrl: String!
+    drmEnforced: Boolean!
+    createdAt: String!
+    updatedAt: String!
+}
+
+type ContentAccessLog {
+    id: ID!
+    contentId: ID!
+    userId: ID!
+    accessType: ContentAccessType!
+    timestamp: String!
+}
+
+enum ContentAccessType {
+    VIEW
+    DOWNLOAD
+}
+
+input DigitalContentInput {
+    bookId: ID!
+    contentType: String!
+    contentUrl: String!
+    drmEnforced: Boolean!
+}
