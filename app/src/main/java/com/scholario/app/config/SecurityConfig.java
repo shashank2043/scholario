@@ -33,7 +33,7 @@ public class SecurityConfig {
                         "/graphiql-local/**",
                         "/monacoeditorwork/**"
                 ).permitAll()
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
