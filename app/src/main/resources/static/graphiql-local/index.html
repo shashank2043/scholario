@@ -1,38 +1,15 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <script>self["MonacoEnvironment"] = (function (paths) {
-          return {
-            globalAPI: false,
-            getWorkerUrl : function (moduleId, label) {
-              var result =  paths[label];
-              if (/^((http:)|(https:)|(file:)|(\/\/))/.test(result)) {
-                var currentUrl = String(window.location);
-                var currentOrigin = currentUrl.substr(0, currentUrl.length - window.location.hash.length - window.location.search.length - window.location.pathname.length);
-                if (result.substring(0, currentOrigin.length) !== currentOrigin) {
-                  var js = '/*' + label + '*/importScripts("' + result + '");';
-                  var blob = new Blob([js], { type: 'application/javascript' });
-                  return URL.createObjectURL(blob);
-                }
-              }
-              return result;
-            }
-          };
-        })({
-  "editorWorkerService": "/graphiql-local/monacoeditorwork/editor.worker.bundle.js",
-  "json": "/graphiql-local/monacoeditorwork/json.worker.bundle.js",
-  "graphql": "/graphiql-local/monacoeditorwork/graphql.worker..bundle.js"
-});</script>
-
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/graphiql-local/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>graphiql-ui</title>
-    <script type="module" crossorigin src="/graphiql-local/assets/index-C8qWf5G5.js"></script>
+    <script type="module" crossorigin src="/graphiql-local/assets/index-C22oCbEb.js"></script>
     <link rel="modulepreload" crossorigin href="/graphiql-local/assets/chunk-BNv3lrIs.js">
     <link rel="modulepreload" crossorigin href="/graphiql-local/assets/types-C_EyyA_i.js">
     <link rel="modulepreload" crossorigin href="/graphiql-local/assets/preload-helper-BAu8z6UR.js">
-    <link rel="stylesheet" crossorigin href="/graphiql-local/assets/index-hELtQIA3.css">
+    <link rel="stylesheet" crossorigin href="/graphiql-local/assets/index-BwlKtlN_.css">
   </head>
   <body>
     <div id="root"></div>
