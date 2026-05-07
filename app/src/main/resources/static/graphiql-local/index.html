@@ -1,17 +1,28 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/graphiql-local/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>graphiql-ui</title>
-    <script type="module" crossorigin src="/graphiql-local/assets/index-C22oCbEb.js"></script>
-    <link rel="modulepreload" crossorigin href="/graphiql-local/assets/chunk-BNv3lrIs.js">
-    <link rel="modulepreload" crossorigin href="/graphiql-local/assets/types-C_EyyA_i.js">
-    <link rel="modulepreload" crossorigin href="/graphiql-local/assets/preload-helper-BAu8z6UR.js">
-    <link rel="stylesheet" crossorigin href="/graphiql-local/assets/index-BwlKtlN_.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+    <title>GraphiQL</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        #graphiql {
+            height: 100dvh;
+        }
+        .loading {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+    </style>
+  <script type="module" crossorigin src="/graphiql-local/assets/index-BqLZPzok.js"></script>
+  <link rel="stylesheet" crossorigin href="/graphiql-local/assets/index-BkUcVgUk.css">
+</head>
+<body>
+    <div id="graphiql"><div class="loading">Loading...</div></div>
+</body>
 </html>
