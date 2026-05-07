@@ -84,6 +84,24 @@ class AuthServiceTest {
     }
 
     @Test
+    void refreshToken_Success() {
+        String refreshToken = "validRefreshToken";
+        DecodedJWT decodedJWT = mock(DecodedJWT.class);
+        when(jwtService.validateToken(refreshToken)).thenReturn(decodedJWT);
+        when(decodedJWT.getSubject()).thenReturn("testuser");
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(jwtService.generateAccessToken(testUser)).thenReturn("newAccessToken");
+        when(jwtService.generateRefreshToken(testUser)).thenReturn("newRefreshToken");
+
+        AuthResponse response = authService.refreshToken(refreshToken);
+
+        assertNotNull(response);
+        assertEquals("newAccessToken", response.accessToken());
+        assertEquals("newRefreshToken", response.refreshToken());
+        verify(jwtService).validateToken(refreshToken);
+    }
+
+    @Test
     void validateToken_ValidToken() {
         String token = "validToken";
         DecodedJWT decodedJWT = mock(DecodedJWT.class);
