@@ -23,7 +23,16 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/graphql", "/h2-console/**","/graphiql/**","/favicon.ico").permitAll()
+                .requestMatchers(
+                        "/graphql",
+                        "/h2-console/**",
+                        "/graphiql/**",
+                        "/favicon.ico:1",
+                        "/assets/**",
+                        "/favicon.svg",
+                        "/graphiql-local/**",
+                        "/monacoeditorwork/**"
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
