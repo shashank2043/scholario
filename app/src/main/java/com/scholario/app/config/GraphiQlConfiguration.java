@@ -19,10 +19,10 @@ public class GraphiQlConfiguration {
     @Order(0)
     public RouterFunction<ServerResponse> graphiQlRouterFunction() {
         RouterFunctions.Builder builder = RouterFunctions.route();
-        ClassPathResource graphiQlPage = new ClassPathResource("graphiql/index.html");
-        GraphiQlHandler handler = new GraphiQlHandler("/graphql", "", graphiQlPage);
-        builder.GET("/graphiql", handler::handleRequest);
-        log.info("GraphiQL interface available at /graphiql");
+        ClassPathResource graphiQlPage = new ClassPathResource("static/graphiql-local/index.html");
+        GraphiQlHandler handler = new GraphiQlHandler("/graphql-local", "", graphiQlPage);
+        builder.GET("/graphiql-local", handler::handleRequest);
+        log.info("GraphiQL interface available at /graphiql-local");
         return builder.build();
     }
 }
