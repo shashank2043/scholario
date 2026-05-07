@@ -28,6 +28,9 @@ public class NotificationPublisher {
     }
 
     public Flux<Notification> getSubscription(NotificationType type) {
+        if (type == null) {
+            return Flux.empty();
+        }
         Sinks.Many<Notification> sink = sinks.get(type);
         return sink != null ? sink.asFlux() : Flux.empty();
     }

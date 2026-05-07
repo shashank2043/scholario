@@ -61,6 +61,13 @@ class RecommendationServiceTest {
     }
 
     @Test
+    void recommendBooks_ShouldThrowException_WhenUserNotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> recommendationService.recommendBooks(1L));
+    }
+
+    @Test
     void suggestCourseMaterials_ShouldReturnSuggestions() {
         Course course = new Course();
         course.setId(1L);
@@ -79,6 +86,13 @@ class RecommendationServiceTest {
         assertFalse(results.isEmpty());
         assertEquals(20L, results.get(0).bookId());
         assertEquals("AI 101", results.get(0).courseContext());
+    }
+
+    @Test
+    void suggestCourseMaterials_ShouldThrowException_WhenCourseNotFound() {
+        when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> recommendationService.suggestCourseMaterials(1L));
     }
 
     @Test

@@ -77,6 +77,13 @@ class AnalyticsServiceTest {
     }
 
     @Test
+    void getBookUsageAnalytics_ShouldThrowException_WhenBookNotFound() {
+        when(bookRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> analyticsService.getBookUsageAnalytics(1L));
+    }
+
+    @Test
     void getCourseMaterialStats_ShouldReturnCorrectStats() {
         Course course = new Course();
         course.setId(1L);
