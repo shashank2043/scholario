@@ -1,0 +1,512 @@
+# Scholario GraphiQL Operations - Step-by-Step Testing Manual
+# ==========================================================
+# HOW TO USE:
+# 1. Copy the GraphQL code into the "Query" pane of GraphiQL.
+# 2. Copy the JSON from the "# Variables" comment into the "Query Variables" pane (bottom left).
+# 3. For authenticated requests, copy the 'accessToken' from the Login response and add it to the 
+#    "HTTP HEADERS" pane as: { "Authorization": "Bearer YOUR_TOKEN_HERE" }
+
+################################################################################
+# 1. AUTHENTICATION & REGISTRATION
+################################################################################
+
+# [1.1] Register a New User
+# Instruction: Run this to create an account. You can change the role to ADMIN, FACULTY, STUDENT, or LIBRARIAN.
+# Variables:
+# {
+#   "input": {
+#     "username": "faculty_jane",
+#     "password": "Password123!",
+#     "email": "jane@scholario.edu",
+#     "fullName": "Jane Doe",
+#     "role": "FACULTY"
+#   }
+# }
+mutation RegisterUser($input: UserInput!) {
+  registerUser(input: $input) {
+    id
+    username
+    email
+    fullName
+    role
+  }
+}
+
+# [1.2] Login to get your JWT Token
+# Instruction: Use the credentials you registered with. Copy the 'accessToken' for future requests.
+# Variables:
+# {
+#   "input": {
+#     "username": "faculty_jane",
+#     "password": "Password123!"
+#   }
+# }
+mutation Login($input: LoginInput!) {
+  login(input: $input) {
+    accessToken
+    refreshToken
+    tokenType
+    expiresIn
+    user {
+      id
+      username
+      role
+    }
+  }
+}
+
+# [1.3] Refresh Token
+# Instruction: Use the 'refreshToken' from the Login response to get a fresh 'accessToken'.
+# Variables:
+# {
+#   "refreshToken": "PASTE_YOUR_REFRESH_TOKEN_HERE"
+# }
+mutation RefreshToken($refreshToken: String!) {
+  refreshToken(refreshToken: $refreshToken) {
+    accessToken
+    refreshToken
+    tokenType
+  }
+}
+
+# [1.4] Validate Token
+# Instruction: Check if a token is still valid and see who it belongs to.
+# Variables:
+# {
+#   "token": "PASTE_YOUR_ACCESS_TOKEN_HERE"
+# }
+query ValidateToken($token: String!) {
+  validateToken(token: $token) {
+    valid
+    username
+    role
+    expiresAt
+  }
+}
+
+# [1.5] Logout
+# Instruction: Invalidates the current session.
+mutation Logout {
+  logout
+}
+
+
+################################################################################
+# 2. USER & PROFILE MANAGEMENT
+################################################################################
+
+# [2.1] Get My Profile
+# Instruction: Fetch details of a specific user. Use the ID from the Login/Register response.
+# Variables:
+# {
+#   "id": "PASTE_USER_ID_HERE"
+# }
+query GetUserById($id: ID!) {
+  getUserById(id: $id) {
+    id
+    username
+    fullName
+    role
+    department {
+      name
+    }
+  }
+}
+
+# [2.2] Update My Profile
+# Instruction: Update your email or full name.
+# Variables:
+# {
+#   "id": "PASTE_USER_ID_HERE",
+#   "input": {
+#     "fullName": "Dr. Jane Doe",
+#     "email": "dr.jane@scholario.edu"
+#   }
+# }
+mutation UpdateUserProfile($id: ID!, $input: ProfileInput!) {
+  updateUserProfile(id: $id, input: $input) {
+    id
+    fullName
+    email
+  }
+}
+
+# [2.3] List All Faculty
+# Instruction: Useful for finding a faculty member to assign as a book owner.
+query GetFacultyList {
+  getFacultyList {
+    id
+    fullName
+    email
+  }
+}
+
+# [2.4] Assign Role (ADMIN ONLY)
+# Instruction: Change a user's role. Requires ADMIN bearer token.
+# Variables:
+# {
+#   "userId": "PASTE_USER_ID_HERE",
+#   "role": "LIBRARIAN"
+# }
+mutation AssignRole($userId: ID!, $role: Role!) {
+  assignRole(userId: $userId, role: $role) {
+    id
+    role
+  }
+}
+
+
+################################################################################
+# 3. BOOK MANAGEMENT (FACULTY & LIBRARIAN)
+################################################################################
+
+# [3.1] Create a New Book (Status: DRAFT)
+# Instruction: Faculty creates a book draft. Copy the 'id' of the created book.
+# Variables:
+# {
+#   "input": {
+#     "title": "Quantum Computing 101",
+#     "isbn": "ISBN-978-Q-001",
+#     "facultyId": "PASTE_FACULTY_ID_HERE",
+#     "description": "Introduction to Quantum bits and gates."
+#   }
+# }
+mutation CreateBook($input: BookInput!) {
+  createBook(input: $input) {
+    id
+    title
+    isbn
+    state {
+      type
+    }
+  }
+}
+
+# [3.2] Update Book Details
+# Instruction: Modify title or description before publication.
+# Variables:
+# {
+#   "id": "PASTE_BOOK_ID_HERE",
+#   "input": {
+#     "title": "Quantum Computing 101 (Revised)",
+#     "isbn": "ISBN-978-Q-001",
+#     "facultyId": "PASTE_FACULTY_ID_HERE",
+#     "description": "Updated intro to Quantum bits."
+#   }
+# }
+mutation UpdateBook($id: ID!, $input: BookInput!) {
+  updateBook(id: $id, input: $input) {
+    id
+    title
+    description
+  }
+}
+
+# [3.3] Search Books
+# Instruction: Filter the catalog by title or ISBN.
+# Variables:
+# {
+#   "title": "Quantum"
+# }
+query SearchBooks($title: String, $isbn: String) {
+  searchBooks(title: $title, isbn: $isbn) {
+    id
+    title
+    isbn
+    state {
+      type
+    }
+  }
+}
+
+# [3.4] Publish Book
+# Instruction: Transitions book state to PUBLISHED. Makes it available for lending.
+# Variables:
+# {
+#   "id": "PASTE_BOOK_ID_HERE"
+# }
+mutation PublishBook($id: ID!) {
+  publishBook(id: $id) {
+    id
+    state {
+      type
+    }
+  }
+}
+
+# [3.5] Create a New Version
+# Instruction: Create a subsequent version (v2, v3) of a published book.
+# Variables:
+# {
+#   "input": {
+#     "parentBookId": "PASTE_BOOK_ID_HERE",
+#     "title": "Quantum Computing 101 - 2nd Edition",
+#     "isbn": "ISBN-978-Q-002",
+#     "description": "Now with more Quantum!"
+#   }
+# }
+mutation VersionBook($input: BookVersionInput!) {
+  versionBook(input: $input) {
+    id
+    title
+    versionNumber
+    parentBookId
+  }
+}
+
+
+################################################################################
+# 4. REVIEWS & APPROVALS
+################################################################################
+
+# [4.1] Submit Book for Review
+# Instruction: Faculty submits a DRAFT book for peer review.
+# Variables:
+# {
+#   "bookId": "PASTE_BOOK_ID_HERE",
+#   "reviewerId": "PASTE_ANOTHER_FACULTY_ID_HERE"
+# }
+mutation SubmitForReview($bookId: ID!, $reviewerId: ID) {
+  submitBookForReview(bookId: $bookId, reviewerId: $reviewerId) {
+    id
+    status
+  }
+}
+
+# [4.2] Approve Review
+# Instruction: Reviewer approves the book.
+# Variables:
+# {
+#   "requestId": "PASTE_REVIEW_REQUEST_ID_HERE",
+#   "feedback": "Excellent quality, ready for students."
+# }
+mutation ApproveBook($requestId: ID!, $feedback: String) {
+  approveBook(requestId: $requestId, feedback: $feedback) {
+    id
+    status
+    feedback
+  }
+}
+
+# [4.3] Request Changes
+# Instruction: Reviewer asks for edits.
+# Variables:
+# {
+#   "requestId": "PASTE_REVIEW_REQUEST_ID_HERE",
+#   "feedback": "Please add a chapter on Grover's Algorithm."
+# }
+mutation RequestChanges($requestId: ID!, $feedback: String) {
+  requestChanges(requestId: $requestId, feedback: $feedback) {
+    id
+    status
+  }
+}
+
+
+################################################################################
+# 5. COURSES & MATERIALS
+################################################################################
+
+# [5.1] Create a Course
+# Instruction: Faculty or Admin creates a new course.
+# Variables:
+# {
+#   "input": {
+#     "courseCode": "CS101",
+#     "title": "Introduction to Computer Science",
+#     "description": "Learn the basics of programming.",
+#     "facultyId": "PASTE_FACULTY_ID_HERE"
+#   }
+# }
+mutation CreateCourse($input: CourseInput!) {
+  createCourse(input: $input) {
+    id
+    courseCode
+    title
+  }
+}
+
+# [5.2] Assign Book to Course
+# Instruction: Map a book as mandatory or optional reading for a course.
+# Variables:
+# {
+#   "input": {
+#     "courseId": "PASTE_COURSE_ID_HERE",
+#     "bookId": "PASTE_BOOK_ID_HERE",
+#     "mandatory": true
+#   }
+# }
+mutation AssignBookToCourse($input: CourseMaterialInput!) {
+  assignBookToCourse(input: $input) {
+    id
+    mandatory
+  }
+}
+
+
+################################################################################
+# 6. RESERVATIONS (STUDENTS)
+################################################################################
+
+# [6.1] Reserve a Book
+# Instruction: Student places a hold on a book.
+# Variables:
+# {
+#   "input": {
+#     "bookId": "PASTE_BOOK_ID_HERE",
+#     "userId": "PASTE_STUDENT_ID_HERE"
+#   }
+# }
+mutation ReserveBook($input: ReservationInput!) {
+  reserveBook(input: $input) {
+    id
+    status
+    reservedAt
+  }
+}
+
+# [6.2] Allocate Reserved Book (LIBRARIAN ONLY)
+# Instruction: Librarian assigns the physical book to the next person in line.
+# Variables:
+# {
+#   "bookId": "PASTE_BOOK_ID_HERE"
+# }
+mutation AllocateReservedBook($bookId: ID!) {
+  allocateReservedBook(bookId: $bookId) {
+    id
+    userId
+    status
+    expiresAt
+  }
+}
+
+
+################################################################################
+# 7. LENDING (LIBRARIANS)
+################################################################################
+
+# [7.1] Issue Book
+# Instruction: Check out a book to a user.
+# Variables:
+# {
+#   "input": {
+#     "bookId": "PASTE_BOOK_ID_HERE",
+#     "userId": "PASTE_USER_ID_HERE"
+#   }
+# }
+mutation IssueBook($input: IssueInput!) {
+  issueBook(input: $input) {
+    id
+    dueDate
+    state {
+      type
+    }
+  }
+}
+
+# [7.2] Return Book
+# Instruction: Check in a book. Note any penalty if overdue.
+# Variables:
+# {
+#   "input": {
+#     "issueId": "PASTE_ISSUE_ID_HERE",
+#     "userId": "PASTE_USER_ID_HERE"
+#   }
+# }
+mutation ReturnBook($input: ReturnInput!) {
+  returnBook(input: $input) {
+    id
+    returnDate
+    penaltyAmount
+    state {
+      type
+    }
+  }
+}
+
+
+################################################################################
+# 8. ROYALTIES (ADMIN)
+################################################################################
+
+# [8.1] Define Royalty Policy
+# Instruction: Set the percentage faculty receives for book usage.
+# Variables:
+# {
+#   "input": {
+#     "bookId": "PASTE_BOOK_ID_HERE",
+#     "facultyId": "PASTE_FACULTY_ID_HERE",
+#     "royaltyPercentage": 12.5,
+#     "sharingModel": "{\"model\": \"Standard\", \"currency\": \"USD\"}"
+#   }
+# }
+mutation DefineRoyaltyPolicy($input: RoyaltyPolicyInput!) {
+  defineRoyaltyPolicy(input: $input) {
+    id
+    royaltyPercentage
+  }
+}
+
+# [8.2] Calculate Payout
+# Instruction: Calculate the royalty amount based on total revenue.
+# Variables:
+# {
+#   "bookId": "PASTE_BOOK_ID_HERE",
+#   "totalRevenue": 10000.0
+# }
+mutation CalculateRoyalty($bookId: ID!, $totalRevenue: Float!) {
+  calculateRoyalty(bookId: $bookId, totalRevenue: $totalRevenue) {
+    id
+    calculatedRoyalty
+    payoutStatus
+  }
+}
+
+
+################################################################################
+# 9. VIOLATIONS (ADMIN)
+################################################################################
+
+# [9.1] Get Violation Reports
+# Instruction: Monitor security violations (unauthorized access, abuse).
+query GetViolationReports {
+  getViolationReports {
+    username
+    type
+    severity
+    description
+  }
+}
+
+
+################################################################################
+# 10. NOTIFICATIONS
+################################################################################
+
+# [10.1] Get My Notifications
+# Instruction: View alerts, due dates, and messages.
+# Variables:
+# {
+#   "userId": "PASTE_USER_ID_HERE"
+# }
+query GetNotifications($userId: ID!) {
+  getNotificationsByUser(userId: $userId) {
+    id
+    message
+    read
+  }
+}
+
+
+################################################################################
+# 11. SUBSCRIPTIONS (REAL-TIME)
+################################################################################
+
+# [11.1] Watch Book Publications
+# Instruction: Run this and keep it active. It will trigger when a book is published.
+subscription OnBookPublished {
+  bookPublished {
+    message
+    relatedEntityId
+  }
+}
