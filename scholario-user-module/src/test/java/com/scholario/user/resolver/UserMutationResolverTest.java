@@ -1,7 +1,9 @@
 package com.scholario.user.resolver;
 
+import com.scholario.user.dto.DepartmentInput;
 import com.scholario.user.dto.ProfileInput;
 import com.scholario.user.dto.UserInput;
+import com.scholario.user.model.Department;
 import com.scholario.user.model.Role;
 import com.scholario.user.model.User;
 import com.scholario.user.service.UserService;
@@ -45,5 +47,21 @@ class UserMutationResolverTest {
 
         assertEquals(user, result);
         verify(userService).assignRole(1L, Role.ADMIN);
+    }
+
+    @Test
+    void createDepartment_Success() {
+        DepartmentInput input = new DepartmentInput("Computer Science", "CS");
+        Department department = new Department();
+        department.setId(1L);
+        department.setName("Computer Science");
+        department.setCode("CS");
+
+        when(userService.createDepartment(input)).thenReturn(department);
+
+        Department result = userMutationResolver.createDepartment(input);
+
+        assertEquals(department, result);
+        verify(userService).createDepartment(input);
     }
 }

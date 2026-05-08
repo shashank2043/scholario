@@ -1,7 +1,9 @@
 package com.scholario.user.resolver;
 
+import com.scholario.user.dto.DepartmentInput;
 import com.scholario.user.dto.ProfileInput;
 import com.scholario.user.dto.UserInput;
+import com.scholario.user.model.Department;
 import com.scholario.user.model.Role;
 import com.scholario.user.model.User;
 import com.scholario.user.service.UserService;
@@ -38,5 +40,11 @@ public class UserMutationResolver {
     @PreAuthorize("hasRole('ADMIN')")
     public User linkFacultyToDepartment(@Argument Long facultyId, @Argument Long departmentId) {
         return userService.linkFacultyToDepartment(facultyId, departmentId);
+    }
+
+    @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public Department createDepartment(@Argument DepartmentInput input) {
+        return userService.createDepartment(input);
     }
 }

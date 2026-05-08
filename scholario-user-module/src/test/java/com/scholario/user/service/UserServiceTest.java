@@ -1,5 +1,6 @@
 package com.scholario.user.service;
 
+import com.scholario.user.dto.DepartmentInput;
 import com.scholario.user.dto.ProfileInput;
 import com.scholario.user.dto.UserInput;
 import com.scholario.user.model.Department;
@@ -105,5 +106,23 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         assertThrows(RuntimeException.class, () -> userService.linkFacultyToDepartment(1L, 1L));
+    }
+
+    @Test
+    void createDepartment_Success() {
+        DepartmentInput input = new DepartmentInput("Computer Science", "CS");
+        Department savedDepartment = new Department();
+        savedDepartment.setId(1L);
+        savedDepartment.setName("Computer Science");
+        savedDepartment.setCode("CS");
+
+        when(departmentRepository.save(any(Department.class))).thenReturn(savedDepartment);
+
+        Department result = userService.createDepartment(input);
+
+        assertNotNull(result);
+        assertEquals("Computer Science", result.getName());
+        assertEquals("CS", result.getCode());
+        verify(departmentRepository).save(any(Department.class));
     }
 }

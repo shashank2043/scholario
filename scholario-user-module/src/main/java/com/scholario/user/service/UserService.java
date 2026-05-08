@@ -1,5 +1,6 @@
 package com.scholario.user.service;
 
+import com.scholario.user.dto.DepartmentInput;
 import com.scholario.user.dto.ProfileInput;
 import com.scholario.user.dto.UserInput;
 import com.scholario.user.model.Department;
@@ -82,5 +83,13 @@ public class UserService {
 
     public List<Department> getDepartments() {
         return departmentRepository.findAll();
+    }
+
+    @Transactional
+    public Department createDepartment(DepartmentInput input) {
+        Department department = new Department();
+        department.setName(input.name());
+        department.setCode(input.code());
+        return departmentRepository.save(department);
     }
 }

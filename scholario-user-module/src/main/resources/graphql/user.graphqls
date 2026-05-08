@@ -1,0 +1,8 @@
+extend type Mutation {
+    createDepartment(input: DepartmentInput!): Department @auth(role: ADMIN)
+}
+
+input DepartmentInput {
+    name: String!
+    code: String!
+}
