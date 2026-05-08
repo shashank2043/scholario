@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -47,14 +46,25 @@ public class ViolationService {
             report.setSeverity(ViolationSeverity.HIGH);
             report.setDescription("User has " + count + " denied access attempts in the last 24 hours.");
             return violationReportRepository.save(report);
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     public List<ViolationReport> analyzeUsagePatterns() {
-        // Simple logic for demonstration: flag users with > 10 access logs (success or fail) in last hour as "Exessive Usage"
         LocalDateTime since = LocalDateTime.now().minusHours(1);
-        // This is a placeholder for more complex pattern analysis
-        return List.of(); 
+        long threshold = 10;
+        List<Object[]> suspiciousUsers = accessLogRepository.findUsersWithExcessiveActivity(since, threshold);
+
+        return suspiciousUsers.stream().map(data -> {
+            String username = (String) data[0];
+            Long count = (Long) data[1];
+
+            ViolationReport report = new ViolationReport();
+            report.setUsername(username);
+            report.setType(ViolationType.EXCESSIVE_USAGE);
+            report.setSeverity(ViolationSeverity.MEDIUM);
+            report.setDescription("User has " + count + " total access attempts in the last hour.");
+            return violationReportRepository.save(report);
+        }).toList();
     }
 
     public List<ViolationReport> getViolationReports(String username) {

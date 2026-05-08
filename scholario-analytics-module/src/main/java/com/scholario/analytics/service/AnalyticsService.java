@@ -20,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +43,7 @@ public class AnalyticsService {
         
         List<Long> contentIds = digitalContentRepository.findByBookId(bookId).stream()
                 .map(DigitalContent::getId)
-                .collect(Collectors.toList());
+                .toList();
         
         long digitalAccess = contentIds.isEmpty() ? 0 : contentAccessLogRepository.countByContentIdIn(contentIds);
 

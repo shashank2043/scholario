@@ -19,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final String USER_NOT_FOUND = "User not found";
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
@@ -37,7 +38,7 @@ public class UserService {
     @Transactional
     public User updateUserProfile(Long id, ProfileInput input) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
         if (input.fullName() != null) {
             user.setFullName(input.fullName());
         }
@@ -50,7 +51,7 @@ public class UserService {
     @Transactional
     public User assignRole(Long userId, Role role) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
         user.setRole(role);
         return userRepository.save(user);
     }
@@ -58,7 +59,7 @@ public class UserService {
     @Transactional
     public User linkFacultyToDepartment(Long facultyId, Long departmentId) {
         User user = userRepository.findById(facultyId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
         if (user.getRole() != Role.FACULTY) {
             throw new RuntimeException("Only faculty can be linked to a department");
         }
@@ -70,7 +71,7 @@ public class UserService {
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
     }
 
     public List<User> getFacultyList() {

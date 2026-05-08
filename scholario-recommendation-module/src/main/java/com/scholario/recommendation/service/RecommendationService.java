@@ -1,7 +1,6 @@
 package com.scholario.recommendation.service;
 
 import com.scholario.analytics.service.AnalyticsService;
-import com.scholario.book.model.Book;
 import com.scholario.book.repository.BookRepository;
 import com.scholario.course.model.Course;
 import com.scholario.course.repository.CourseMaterialRepository;
@@ -11,13 +10,11 @@ import com.scholario.lending.repository.IssueRecordRepository;
 import com.scholario.recommendation.dto.BookRecommendation;
 import com.scholario.recommendation.dto.CourseMaterialSuggestion;
 import com.scholario.recommendation.dto.DemandPrediction;
-import com.scholario.user.model.User;
 import com.scholario.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,14 +28,15 @@ public class RecommendationService {
     private final AnalyticsService analyticsService;
 
     public List<BookRecommendation> recommendBooks(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found");
+        }
 
         // Logic: Recommend books from the same department that the user hasn't borrowed
         List<IssueRecord> history = issueRecordRepository.findByUserId(userId);
         List<Long> borrowedBookIds = history.stream()
                 .map(IssueRecord::getBookId)
-                .collect(Collectors.toList());
+                .toList();
 
         // For demo, we'll just pick some books from the same department
         // (Assuming department filter or just some popular books)
@@ -50,7 +48,7 @@ public class RecommendationService {
                         b.getTitle(),
                         "Popular in your department",
                         0.85))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<CourseMaterialSuggestion> suggestCourseMaterials(Long courseId) {
@@ -68,7 +66,7 @@ public class RecommendationService {
                         b.getTitle(),
                         course.getTitle(),
                         "Authored by course faculty"))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<DemandPrediction> predictDemand() {
@@ -83,6 +81,6 @@ public class RecommendationService {
                     return new DemandPrediction(b.getId(), b.getTitle(), predicted, risk);
                 })
                 .sorted((a, b) -> Integer.compare(b.predictedDemandCount(), a.predictedDemandCount()))
-                .collect(Collectors.toList());
+                .toList();
     }
 }

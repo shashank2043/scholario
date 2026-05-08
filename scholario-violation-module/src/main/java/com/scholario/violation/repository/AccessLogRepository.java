@@ -14,4 +14,7 @@ public interface AccessLogRepository extends JpaRepository<AccessLog, Long> {
     
     @Query("SELECT a.username, COUNT(a) FROM AccessLog a WHERE a.allowed = false AND a.timestamp > :since GROUP BY a.username HAVING COUNT(a) > :threshold")
     List<Object[]> findUsersWithExcessiveDeniedAccess(LocalDateTime since, long threshold);
+
+    @Query("SELECT a.username, COUNT(a) FROM AccessLog a WHERE a.timestamp > :since GROUP BY a.username HAVING COUNT(a) > :threshold")
+    List<Object[]> findUsersWithExcessiveActivity(LocalDateTime since, long threshold);
 }

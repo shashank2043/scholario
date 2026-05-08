@@ -1,6 +1,5 @@
 package com.scholario.app.config;
 
-import graphql.language.EnumValue;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
@@ -22,37 +21,54 @@ public class GraphQLConfig {
             @Override
             public GraphQLFieldDefinition onField(SchemaDirectiveWiringEnvironment<GraphQLFieldDefinition> environment) {
                 var appliedDirective = environment.getAppliedDirective("auth");
-                if (appliedDirective != null && appliedDirective.getArgument("role") != null) {
-                    String targetRole = appliedDirective.getArgument("role").getArgumentValue().getValue().toString();
-                    
-                    DataFetcher<?> originalDataFetcher = environment.getCodeRegistry().getDataFetcher(
-                            (GraphQLObjectType) environment.getFieldsContainer(), 
-                            environment.getFieldDefinition());
-                    
-                    DataFetcher<?> authDataFetcher = dataFetchingEnvironment -> {
-                        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                        
-                        if (authentication == null || !authentication.isAuthenticated()) {
-                            throw new AccessDeniedException("Unauthorized: Authentication required");
-                        }
-                        
-                        boolean hasRole = authentication.getAuthorities().stream()
-                                .anyMatch(a -> a.getAuthority().equals("ROLE_" + targetRole));
-                        
-                        if (!hasRole) {
-                            throw new AccessDeniedException("Forbidden: Insufficient privileges");
-                        }
-                        
-                        return originalDataFetcher.get(dataFetchingEnvironment);
-                    };
-                    
-                    environment.getCodeRegistry().dataFetcher(
-                            (GraphQLObjectType) environment.getFieldsContainer(), 
-                            environment.getFieldDefinition(), 
-                            authDataFetcher);
+                if (appliedDirective == null) {
+                    return environment.getElement();
                 }
+
+                String targetRole = getTargetRole(appliedDirective);
+                if (targetRole == null) {
+                    return environment.getElement();
+                }
+
+                DataFetcher<?> originalDataFetcher = environment.getCodeRegistry().getDataFetcher(
+                        (GraphQLObjectType) environment.getFieldsContainer(), 
+                        environment.getFieldDefinition());
+                
+                DataFetcher<?> authDataFetcher = createAuthDataFetcher(originalDataFetcher, targetRole);
+                
+                environment.getCodeRegistry().dataFetcher(
+                        (GraphQLObjectType) environment.getFieldsContainer(), 
+                        environment.getFieldDefinition(), 
+                        authDataFetcher);
                 
                 return environment.getElement();
+            }
+
+            private String getTargetRole(graphql.schema.GraphQLAppliedDirective directive) {
+                var roleArg = directive.getArgument("role");
+                if (roleArg != null && roleArg.getArgumentValue() != null && roleArg.getArgumentValue().getValue() != null) {
+                    return roleArg.getArgumentValue().getValue().toString();
+                }
+                return null;
+            }
+
+            private DataFetcher<?> createAuthDataFetcher(DataFetcher<?> originalDataFetcher, String targetRole) {
+                return dataFetchingEnvironment -> {
+                    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                    
+                    if (authentication == null || !authentication.isAuthenticated()) {
+                        throw new AccessDeniedException("Unauthorized: Authentication required");
+                    }
+                    
+                    boolean hasRole = authentication.getAuthorities().stream()
+                            .anyMatch(a -> a.getAuthority().equals("ROLE_" + targetRole));
+                    
+                    if (!hasRole) {
+                        throw new AccessDeniedException("Forbidden: Insufficient privileges");
+                    }
+                    
+                    return originalDataFetcher.get(dataFetchingEnvironment);
+                };
             }
         });
     }

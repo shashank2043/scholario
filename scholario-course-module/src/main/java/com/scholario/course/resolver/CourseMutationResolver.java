@@ -2,8 +2,6 @@ package com.scholario.course.resolver;
 
 import com.scholario.course.dto.CourseInput;
 import com.scholario.course.dto.CourseMaterialInput;
-import com.scholario.course.dto.CourseMaterialResponse;
-import com.scholario.course.dto.CourseResponse;
 import com.scholario.course.model.Course;
 import com.scholario.course.model.CourseMaterial;
 import com.scholario.course.service.CourseService;
@@ -13,7 +11,6 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
-import java.util.stream.Collectors;
 
 @Controller
 @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")

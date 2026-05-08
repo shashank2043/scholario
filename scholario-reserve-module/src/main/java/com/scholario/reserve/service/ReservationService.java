@@ -12,9 +12,15 @@ import java.util.List;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private ReservationService self;
 
     public ReservationService(ReservationRepository reservationRepository) {
         this.reservationRepository = reservationRepository;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setSelf(@org.springframework.context.annotation.Lazy ReservationService self) {
+        this.self = self;
     }
 
     @Transactional
@@ -65,7 +71,7 @@ public class ReservationService {
             first.setStatus(new Expired());
             reservationRepository.save(first);
             // Recursively try to allocate the next one
-            return allocateReservedBook(bookId);
+            return self.allocateReservedBook(bookId);
         }
 
         first.setStatus(new Allocated());

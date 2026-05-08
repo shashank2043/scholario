@@ -86,7 +86,9 @@ public class GlobalGraphQlExceptionHandler {
 
     @GraphQlExceptionHandler
     public GraphQLError handleException(Exception ex, DataFetchingEnvironment env) {
-        logger.error("Unexpected error for user '{}'", getUsername(env), ex);
+        if (logger.isErrorEnabled()) {
+            logger.error("Unexpected error for user '{}'", getUsername(env), ex);
+        }
         return GraphqlErrorBuilder.newError(env)
                 .message("An unexpected error occurred. Please contact support.")
                 .errorType(ErrorType.INTERNAL_ERROR)

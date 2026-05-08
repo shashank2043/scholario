@@ -4,7 +4,6 @@ import com.scholario.book.dto.BookInput;
 import com.scholario.book.dto.BookVersionInput;
 import com.scholario.book.model.Book;
 import com.scholario.book.service.BookService;
-import graphql.schema.DataFetchingEnvironment;
 import jakarta.validation.Valid;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;

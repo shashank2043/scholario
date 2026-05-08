@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -34,13 +33,13 @@ public class NotificationService {
     public List<NotificationResponse> getNotificationsByUser(Long userId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(NotificationResponse::fromEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<NotificationResponse> getUnreadNotifications(Long userId) {
         return notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId).stream()
                 .map(NotificationResponse::fromEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public long getUnreadCount(Long userId) {

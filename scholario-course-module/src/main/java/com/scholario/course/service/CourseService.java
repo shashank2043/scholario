@@ -105,7 +105,7 @@ public class CourseService {
         CourseMaterial material = new CourseMaterial();
         material.setCourse(course);
         material.setBookId(input.bookId());
-        material.setMandatory(input.mandatory() != null ? input.mandatory() : false);
+        material.setMandatory(input.mandatory() != null && input.mandatory());
 
         return courseMaterialRepository.save(material);
     }

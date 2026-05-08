@@ -8,8 +8,6 @@ import com.scholario.user.model.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 @Service

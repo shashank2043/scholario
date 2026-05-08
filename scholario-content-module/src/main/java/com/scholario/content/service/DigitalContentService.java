@@ -21,6 +21,12 @@ public class DigitalContentService {
     private final DigitalContentRepository digitalContentRepository;
     private final ContentAccessLogRepository contentAccessLogRepository;
     private final UserContentAccessRepository userContentAccessRepository;
+    private DigitalContentService self;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setSelf(@org.springframework.context.annotation.Lazy DigitalContentService self) {
+        this.self = self;
+    }
 
     public DigitalContent getDigitalContent(Long id) {
         return digitalContentRepository.findById(id)
@@ -57,7 +63,7 @@ public class DigitalContentService {
                 .build();
         userContentAccessRepository.save(access);
 
-        return logAccess(contentId, userId, ContentAccessType.VIEW); // Log the initial grant/access check
+        return self.logAccess(contentId, userId, ContentAccessType.VIEW); // Log the initial grant/access check
     }
 
     @Transactional

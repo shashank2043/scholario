@@ -7,11 +7,13 @@ import com.scholario.auth.dto.TokenValidationResponse;
 import com.scholario.user.model.User;
 import com.scholario.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthService {
 
@@ -68,6 +70,7 @@ public class AuthService {
                     decodedJWT.getExpiresAt().toString()
             );
         } catch (Exception e) {
+            log.info("Token validation failed: {}", e.getMessage());
             return new TokenValidationResponse(false, null, null, null);
         }
     }

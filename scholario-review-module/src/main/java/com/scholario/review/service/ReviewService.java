@@ -16,6 +16,7 @@ import java.util.Optional;
 @Service
 public class ReviewService {
 
+    private static final String REVIEW_RECORD_NOT_FOUND = "Review record not found";
     private final ReviewRecordRepository reviewRecordRepository;
     private final ReviewHistoryRepository reviewHistoryRepository;
     private final BookService bookService;
@@ -53,7 +54,7 @@ public class ReviewService {
     @Transactional
     public ReviewRecord approveBook(Long requestId, String feedback) {
         ReviewRecord record = reviewRecordRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Review record not found"));
+                .orElseThrow(() -> new IllegalArgumentException(REVIEW_RECORD_NOT_FOUND));
 
         // 1. Update Review Record
         record.setStatus(new Approved());
@@ -72,7 +73,7 @@ public class ReviewService {
     @Transactional
     public ReviewRecord rejectBook(Long requestId, String feedback) {
         ReviewRecord record = reviewRecordRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Review record not found"));
+                .orElseThrow(() -> new IllegalArgumentException(REVIEW_RECORD_NOT_FOUND));
 
         record.setStatus(new Rejected());
         record.setFeedback(feedback);
@@ -95,7 +96,7 @@ public class ReviewService {
     @Transactional
     public ReviewRecord requestChanges(Long requestId, String feedback) {
         ReviewRecord record = reviewRecordRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Review record not found"));
+                .orElseThrow(() -> new IllegalArgumentException(REVIEW_RECORD_NOT_FOUND));
 
         record.setStatus(new ChangesRequested());
         record.setFeedback(feedback);

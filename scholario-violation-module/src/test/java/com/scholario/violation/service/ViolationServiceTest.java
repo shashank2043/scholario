@@ -58,6 +58,26 @@ class ViolationServiceTest {
     }
 
     @Test
+    void analyzeUsagePatterns_ShouldGenerateReportsForExcessiveUsage() {
+        Object[] excessiveData = new Object[]{"active_user", 25L};
+        List<Object[]> results = Collections.singletonList(excessiveData);
+        when(accessLogRepository.findUsersWithExcessiveActivity(any(LocalDateTime.class), eq(10L)))
+                .thenReturn(results);
+        
+        when(violationReportRepository.save(any(ViolationReport.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        List<ViolationReport> reports = violationService.analyzeUsagePatterns();
+
+        assertEquals(1, reports.size());
+        assertEquals("active_user", reports.get(0).getUsername());
+        assertEquals(ViolationType.EXCESSIVE_USAGE, reports.get(0).getType());
+        assertEquals(ViolationSeverity.MEDIUM, reports.get(0).getSeverity());
+        assertTrue(reports.get(0).getDescription().contains("25"));
+        
+        verify(violationReportRepository, times(1)).save(any(ViolationReport.class));
+    }
+
+    @Test
     void getViolationReports_WithUsername_ShouldReturnUserReports() {
         ViolationReport report = new ViolationReport();
         report.setUsername("user1");
