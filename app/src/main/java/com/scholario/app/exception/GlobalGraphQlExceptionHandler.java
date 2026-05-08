@@ -20,6 +20,7 @@ public class GlobalGraphQlExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalGraphQlExceptionHandler.class);
     private final ApplicationEventPublisher eventPublisher;
+    private static final String ANONYMOUS_USER = "anonymous";
 
     public GlobalGraphQlExceptionHandler(ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
@@ -100,7 +101,7 @@ public class GlobalGraphQlExceptionHandler {
                 return s;
             }
         }
-        return "anonymous";
+        return ANONYMOUS_USER;
     }
 
     private String getUsername(DataFetchingEnvironment env) {
@@ -117,11 +118,11 @@ public class GlobalGraphQlExceptionHandler {
         }
 
         // Priority 3: Fallback to ThreadLocal SecurityContextHolder
-        if (auth == null || auth.getName().equals("anonymous")) {
+        if (auth == null || auth.getName().equals(ANONYMOUS_USER)) {
             auth = SecurityContextHolder.getContext().getAuthentication();
         }
 
-        if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymous")) {
+        if (auth != null && auth.isAuthenticated() && !auth.getName().equals(ANONYMOUS_USER)) {
             Object principal = auth.getPrincipal();
             if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
                 return userDetails.getUsername();
@@ -129,6 +130,6 @@ public class GlobalGraphQlExceptionHandler {
             return auth.getName();
         }
         
-        return "anonymous";
+        return ANONYMOUS_USER;
     }
 }

@@ -4,6 +4,7 @@ import com.scholario.royalty.dto.RoyaltyPolicyInput;
 import com.scholario.royalty.model.RoyaltyPolicy;
 import com.scholario.royalty.model.RoyaltyRecord;
 import com.scholario.royalty.service.RoyaltyService;
+import jakarta.validation.Valid;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +22,7 @@ public class RoyaltyMutationResolver {
     }
 
     @MutationMapping
-    public RoyaltyPolicy defineRoyaltyPolicy(@Argument RoyaltyPolicyInput input) {
+    public RoyaltyPolicy defineRoyaltyPolicy(@Valid @Argument RoyaltyPolicyInput input) {
         return royaltyService.defineRoyaltyPolicy(input);
     }
 
