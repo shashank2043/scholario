@@ -1,5 +1,6 @@
 package com.scholario.app.config;
 
+import graphql.language.EnumValue;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;

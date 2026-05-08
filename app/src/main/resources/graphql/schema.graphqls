@@ -1,5 +1,3 @@
-directive @auth(role: Role) on FIELD_DEFINITION | OBJECT
-
 type Query {
     getBookById(id: ID!): Book
     searchBooks(title: String, isbn: String): [Book]
@@ -41,8 +39,8 @@ type Mutation {
     # User Mutations
     registerUser(input: UserInput!): User
     updateUserProfile(id: ID!, input: ProfileInput!): User
-    assignRole(userId: ID!, role: Role!): User @auth(role: ADMIN)
-    linkFacultyToDepartment(facultyId: ID!, departmentId: ID!): User @auth(role: ADMIN)
+    assignRole(userId: ID!, role: Role!): User
+    linkFacultyToDepartment(facultyId: ID!, departmentId: ID!): User
 
     # Reservation Mutations
     reserveBook(input: ReservationInput!): Reservation

@@ -1,5 +1,5 @@
 extend type Mutation {
-    createDepartment(input: DepartmentInput!): Department @auth(role: ADMIN)
+    createDepartment(input: DepartmentInput!): Department
 }
 
 input DepartmentInput {
