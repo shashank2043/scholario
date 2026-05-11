@@ -4,6 +4,7 @@ import com.scholario.content.dto.DigitalContentInput;
 import com.scholario.content.model.ContentAccessLog;
 import com.scholario.content.model.DigitalContent;
 import com.scholario.content.service.DigitalContentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -32,7 +33,7 @@ public class DigitalContentResolver {
 
     @MutationMapping
     @PreAuthorize("hasAnyRole('FACULTY', 'LIBRARIAN', 'ADMIN')")
-    public DigitalContent uploadDigitalContent(@Argument DigitalContentInput input) {
+    public DigitalContent uploadDigitalContent(@Valid @Argument DigitalContentInput input) {
         return digitalContentService.uploadDigitalContent(input);
     }
 

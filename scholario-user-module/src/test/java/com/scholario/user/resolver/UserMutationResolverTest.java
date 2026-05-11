@@ -1,7 +1,6 @@
 package com.scholario.user.resolver;
 
 import com.scholario.user.dto.DepartmentInput;
-import com.scholario.user.dto.ProfileInput;
 import com.scholario.user.dto.UserInput;
 import com.scholario.user.model.Department;
 import com.scholario.user.model.Role;

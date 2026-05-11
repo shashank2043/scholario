@@ -6,6 +6,7 @@ import com.scholario.lending.dto.ReturnInput;
 import com.scholario.lending.dto.RenewInput;
 import com.scholario.lending.model.IssueRecord;
 import com.scholario.lending.service.IssueService;
+import jakarta.validation.Valid;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,22 +25,22 @@ public class IssueMutationResolver {
     }
 
     @MutationMapping
-    public IssueRecord issueBook(@Argument IssueInput input) {
+    public IssueRecord issueBook(@Valid @Argument IssueInput input) {
         return issueService.issueBook(input);
     }
 
     @MutationMapping
-    public IssueRecord returnBook(@Argument ReturnInput input) {
+    public IssueRecord returnBook(@Valid @Argument ReturnInput input) {
         return issueService.returnBook(input);
     }
 
     @MutationMapping
-    public IssueRecord renewBook(@Argument RenewInput input) {
+    public IssueRecord renewBook(@Valid @Argument RenewInput input) {
         return issueService.renewBook(input);
     }
 
     @MutationMapping
-    public List<IssueRecord> bulkIssueBooks(@Argument BulkIssueInput input) {
+    public List<IssueRecord> bulkIssueBooks(@Valid @Argument BulkIssueInput input) {
         return issueService.bulkIssueBooks(input);
     }
 }

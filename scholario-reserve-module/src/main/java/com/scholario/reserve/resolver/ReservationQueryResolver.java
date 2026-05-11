@@ -8,7 +8,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
@@ -24,13 +23,13 @@ public class ReservationQueryResolver {
     public List<ReservationResponse> getReservationQueue(@Argument Long bookId) {
         return reservationService.getReservationQueue(bookId).stream()
                 .map(ReservationResponse::fromEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @QueryMapping
     public List<ReservationResponse> getUserReservations(@Argument Long userId) {
         return reservationService.getUserReservations(userId).stream()
                 .map(ReservationResponse::fromEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

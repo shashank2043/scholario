@@ -1,7 +1,5 @@
 package com.scholario.book.dto;
 
-import com.scholario.book.model.BookState;
-
 public record BookResponse(
         Long id,
         String title,

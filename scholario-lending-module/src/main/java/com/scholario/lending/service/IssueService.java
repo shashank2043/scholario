@@ -24,6 +24,7 @@ public class IssueService {
     private static final int DEFAULT_ISSUE_DAYS = 14;
     private static final int MAX_RENEWALS = 2;
     private static final double PENALTY_PER_DAY = 1.0;
+    private static final String STATE_RETURNED = "RETURNED";
 
     public IssueService(IssueRecordRepository issueRecordRepository) {
         this.issueRecordRepository = issueRecordRepository;
@@ -33,7 +34,7 @@ public class IssueService {
 
     public IssueRecord issueBook(IssueInput input) {
         // Check max books per user
-        List<IssueRecord> activeIssues = issueRecordRepository.findByUserIdAndStateTypeNot(input.userId(), "RETURNED");
+        List<IssueRecord> activeIssues = issueRecordRepository.findByUserIdAndStateTypeNot(input.userId(), STATE_RETURNED);
         if (activeIssues.size() >= MAX_BOOKS_PER_USER) {
             throw new IllegalStateException("User has reached maximum limit of " + MAX_BOOKS_PER_USER + " books");
         }
@@ -107,7 +108,7 @@ public class IssueService {
         List<IssueRecord> issued = new ArrayList<>();
 
         // Check max books per user
-        List<IssueRecord> activeIssues = issueRecordRepository.findByUserIdAndStateTypeNot(input.userId(), "RETURNED");
+        List<IssueRecord> activeIssues = issueRecordRepository.findByUserIdAndStateTypeNot(input.userId(), STATE_RETURNED);
         int availableSlots = MAX_BOOKS_PER_USER - activeIssues.size();
         if (availableSlots < input.bookIds().size()) {
             throw new IllegalStateException("User can only issue " + availableSlots + " more books (max " + MAX_BOOKS_PER_USER + ")");
@@ -141,7 +142,7 @@ public class IssueService {
     // Queries
 
     public List<IssueRecord> getIssuedBooksByUser(Long userId) {
-        return issueRecordRepository.findByUserIdAndStateTypeNot(userId, "RETURNED");
+        return issueRecordRepository.findByUserIdAndStateTypeNot(userId, STATE_RETURNED);
     }
 
     public List<IssueRecord> getIssueHistory(Long userId) {

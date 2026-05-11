@@ -14,12 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class BookService {
 
+    private static final String BOOK_NOT_FOUND = "Book not found with id: ";
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
@@ -41,11 +41,11 @@ public class BookService {
             return bookRepository.findAll().stream()
                     .filter(b -> b.getTitle().toLowerCase().contains(title.toLowerCase())
                             && b.getIsbn().contains(isbn))
-                    .collect(Collectors.toList());
+                    .toList();
         } else if (title != null) {
             return bookRepository.findAll().stream()
                     .filter(b -> b.getTitle().toLowerCase().contains(title.toLowerCase()))
-                    .collect(Collectors.toList());
+                    .toList();
         } else if (isbn != null) {
             return bookRepository.findByIsbn(isbn)
                     .map(List::of)
@@ -98,7 +98,7 @@ public class BookService {
 
     public Book updateBook(Long id, BookInput input) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Book not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(BOOK_NOT_FOUND + id));
 
         if (!(book.getState() instanceof Draft)) {
             throw new IllegalStateException("Cannot update book in " + book.getState().name() + " state");
@@ -116,7 +116,7 @@ public class BookService {
 
     public Book deleteBook(Long id) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Book not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(BOOK_NOT_FOUND + id));
 
         if (book.getState() instanceof Published) {
             throw new IllegalStateException("Cannot delete published book");
@@ -128,7 +128,7 @@ public class BookService {
 
     public Book submitForReview(Long id) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Book not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(BOOK_NOT_FOUND + id));
 
         BookState currentState = book.getState();
         BookState newState = new Review();
@@ -144,7 +144,7 @@ public class BookService {
 
     public Book updateBookState(Long id, BookState newState) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Book not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(BOOK_NOT_FOUND + id));
 
         BookState currentState = book.getState();
         if (currentState.canTransitionTo(newState)) {
@@ -169,7 +169,7 @@ public class BookService {
 
     public Book archiveBook(Long id) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Book not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(BOOK_NOT_FOUND + id));
 
         book.setState(new Archived());
         return bookRepository.save(book);

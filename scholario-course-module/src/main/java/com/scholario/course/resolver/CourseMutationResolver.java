@@ -2,17 +2,15 @@ package com.scholario.course.resolver;
 
 import com.scholario.course.dto.CourseInput;
 import com.scholario.course.dto.CourseMaterialInput;
-import com.scholario.course.dto.CourseMaterialResponse;
-import com.scholario.course.dto.CourseResponse;
 import com.scholario.course.model.Course;
 import com.scholario.course.model.CourseMaterial;
 import com.scholario.course.service.CourseService;
+import jakarta.validation.Valid;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
-import java.util.stream.Collectors;
 
 @Controller
 @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
@@ -25,17 +23,17 @@ public class CourseMutationResolver {
     }
 
     @MutationMapping
-    public Course createCourse(@Argument CourseInput input) {
+    public Course createCourse(@Valid @Argument CourseInput input) {
         return courseService.createCourse(input);
     }
 
     @MutationMapping
-    public Course updateCourse(@Argument Long id, @Argument CourseInput input) {
+    public Course updateCourse(@Argument Long id, @Valid @Argument CourseInput input) {
         return courseService.updateCourse(id, input);
     }
 
     @MutationMapping
-    public CourseMaterial assignBookToCourse(@Argument CourseMaterialInput input) {
+    public CourseMaterial assignBookToCourse(@Valid @Argument CourseMaterialInput input) {
         return courseService.assignBookToCourse(input);
     }
 

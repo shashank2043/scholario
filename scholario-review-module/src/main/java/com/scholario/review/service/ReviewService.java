@@ -16,6 +16,7 @@ import java.util.Optional;
 @Service
 public class ReviewService {
 
+    private static final String REVIEW_RECORD_NOT_FOUND = "Review record not found";
     private final ReviewRecordRepository reviewRecordRepository;
     private final ReviewHistoryRepository reviewHistoryRepository;
     private final BookService bookService;
@@ -53,7 +54,7 @@ public class ReviewService {
     @Transactional
     public ReviewRecord approveBook(Long requestId, String feedback) {
         ReviewRecord record = reviewRecordRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Review record not found"));
+                .orElseThrow(() -> new IllegalArgumentException(REVIEW_RECORD_NOT_FOUND));
 
         // 1. Update Review Record
         record.setStatus(new Approved());
@@ -71,40 +72,34 @@ public class ReviewService {
 
     @Transactional
     public ReviewRecord rejectBook(Long requestId, String feedback) {
-        ReviewRecord record = reviewRecordRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Review record not found"));
+        ReviewRecord reviewRecord = reviewRecordRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException(REVIEW_RECORD_NOT_FOUND));
 
-        record.setStatus(new Rejected());
-        record.setFeedback(feedback);
-        ReviewRecord savedRecord = reviewRecordRepository.save(record);
+        reviewRecord.setStatus(new Rejected());
+        reviewRecord.setFeedback(feedback);
+        ReviewRecord savedRecord = reviewRecordRepository.save(reviewRecord);
 
-        // Optional: Transition Book State? Requirements don't specify. 
-        // Let's keep it in REVIEW or move to ARCHIVED? 
-        // Based on BookState.java, Review can go to Archived or Draft.
-        // Let's assume Rejection means it's Archived for now, or just stays in REVIEW.
-        // Actually, let's just leave it in REVIEW and the user can archive it if they want.
-        // Or better, move back to DRAFT for major changes? That's requestChanges.
-        // Let's move to ARCHIVED for Reject.
-        bookService.archiveBook(record.getBookId());
+        // Transition Book back to DRAFT for revision
+        bookService.updateBookState(reviewRecord.getBookId(), new Draft());
 
-        addHistory(savedRecord, new Rejected(), feedback, record.getReviewerId());
+        addHistory(savedRecord, new Rejected(), feedback, reviewRecord.getReviewerId());
 
         return savedRecord;
     }
 
     @Transactional
     public ReviewRecord requestChanges(Long requestId, String feedback) {
-        ReviewRecord record = reviewRecordRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Review record not found"));
+        ReviewRecord reviewRecord = reviewRecordRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException(REVIEW_RECORD_NOT_FOUND));
 
-        record.setStatus(new ChangesRequested());
-        record.setFeedback(feedback);
-        ReviewRecord savedRecord = reviewRecordRepository.save(record);
+        reviewRecord.setStatus(new ChangesRequested());
+        reviewRecord.setFeedback(feedback);
+        ReviewRecord savedRecord = reviewRecordRepository.save(reviewRecord);
 
         // Transition Book back to DRAFT
-        bookService.updateBookState(record.getBookId(), new Draft());
+        bookService.updateBookState(reviewRecord.getBookId(), new Draft());
 
-        addHistory(savedRecord, new ChangesRequested(), feedback, record.getReviewerId());
+        addHistory(savedRecord, new ChangesRequested(), feedback, reviewRecord.getReviewerId());
 
         return savedRecord;
     }
@@ -119,9 +114,9 @@ public class ReviewService {
                 .orElse(List.of());
     }
 
-    private void addHistory(ReviewRecord record, ReviewStatus status, String feedback, Long performedBy) {
+    private void addHistory(ReviewRecord reviewRecord, ReviewStatus status, String feedback, Long performedBy) {
         ReviewHistory history = new ReviewHistory();
-        history.setReviewRecordId(record.getId());
+        history.setReviewRecordId(reviewRecord.getId());
         history.setStatus(status);
         history.setFeedback(feedback);
         history.setPerformedBy(performedBy);

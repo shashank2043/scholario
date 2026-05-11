@@ -3,6 +3,7 @@ package com.scholario.auth.resolver;
 import com.scholario.auth.dto.AuthResponse;
 import com.scholario.auth.dto.LoginInput;
 import com.scholario.auth.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -16,7 +17,7 @@ public class AuthMutationResolver {
     private final AuthService authService;
 
     @MutationMapping
-    public AuthResponse login(@Argument LoginInput input) {
+    public AuthResponse login(@Valid @Argument LoginInput input) {
         return authService.login(input);
     }
 

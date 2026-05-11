@@ -1,6 +1,5 @@
 package com.scholario.auth.resolver;
 
-import com.scholario.auth.dto.TokenValidationResponse;
 import com.scholario.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -40,3 +40,5 @@ out/
 .env
 /CLAUDE.md
 /.claude/
+/scholario-api-tester/node_modules/
+/scholario-api-tester/

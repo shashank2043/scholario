@@ -4,7 +4,7 @@ import com.scholario.book.dto.BookInput;
 import com.scholario.book.dto.BookVersionInput;
 import com.scholario.book.model.Book;
 import com.scholario.book.service.BookService;
-import graphql.schema.DataFetchingEnvironment;
+import jakarta.validation.Valid;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,13 +21,13 @@ public class BookMutationResolver {
 
     @MutationMapping
     @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
-    public Book createBook(@Argument BookInput input) {
+    public Book createBook(@Valid @Argument BookInput input) {
         return bookService.createBook(input);
     }
 
     @MutationMapping
     @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
-    public Book updateBook(@Argument Long id,@Argument BookInput input) {
+    public Book updateBook(@Argument Long id, @Valid @Argument BookInput input) {
         return bookService.updateBook(id, input);
     }
 
@@ -51,7 +51,7 @@ public class BookMutationResolver {
 
     @MutationMapping
     @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
-    public Book versionBook(@Argument BookVersionInput input) {
+    public Book versionBook(@Valid @Argument BookVersionInput input) {
         return bookService.versionBook(input);
     }
 }

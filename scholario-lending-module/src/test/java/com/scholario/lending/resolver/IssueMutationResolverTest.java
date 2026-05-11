@@ -25,12 +25,12 @@ class IssueMutationResolverTest {
     @Test
     void issueBook_Success() {
         IssueInput input = new IssueInput(1L, 1L);
-        IssueRecord record = new IssueRecord();
-        when(issueService.issueBook(input)).thenReturn(record);
+        IssueRecord issueRecord = new IssueRecord();
+        when(issueService.issueBook(input)).thenReturn(issueRecord);
 
         IssueRecord result = issueMutationResolver.issueBook(input);
 
-        assertEquals(record, result);
+        assertEquals(issueRecord, result);
         verify(issueService).issueBook(input);
     }
 }

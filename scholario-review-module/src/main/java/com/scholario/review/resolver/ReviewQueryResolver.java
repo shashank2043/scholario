@@ -10,7 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @PreAuthorize("isAuthenticated()")
@@ -40,7 +39,7 @@ public class ReviewQueryResolver {
                         h.getPerformedBy(),
                         h.getTimestamp().toString()
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private ReviewResponse mapToResponse(ReviewRecord record) {

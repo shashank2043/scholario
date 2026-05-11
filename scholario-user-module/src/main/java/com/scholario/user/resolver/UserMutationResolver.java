@@ -7,6 +7,7 @@ import com.scholario.user.model.Department;
 import com.scholario.user.model.Role;
 import com.scholario.user.model.User;
 import com.scholario.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -20,13 +21,13 @@ public class UserMutationResolver {
     private final UserService userService;
 
     @MutationMapping
-    public User registerUser(@Argument UserInput input) {
+    public User registerUser(@Valid @Argument UserInput input) {
         return userService.registerUser(input);
     }
 
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
-    public User updateUserProfile(@Argument Long id, @Argument ProfileInput input) {
+    public User updateUserProfile(@Argument Long id, @Valid @Argument ProfileInput input) {
         return userService.updateUserProfile(id, input);
     }
 
@@ -44,7 +45,7 @@ public class UserMutationResolver {
 
     @MutationMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Department createDepartment(@Argument DepartmentInput input) {
+    public Department createDepartment(@Valid @Argument DepartmentInput input) {
         return userService.createDepartment(input);
     }
 }

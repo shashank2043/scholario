@@ -2,13 +2,17 @@ package com.scholario.royalty.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import graphql.GraphQLContext;
+import graphql.execution.CoercedVariables;
 import graphql.language.StringValue;
+import graphql.language.Value;
 import graphql.schema.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.graphql.execution.RuntimeWiringConfigurer;
 
 import java.io.IOException;
+import java.util.Locale;
 
 @Configuration
 public class GraphQLScalarConfig {
@@ -20,7 +24,7 @@ public class GraphQLScalarConfig {
             .description("JSON scalar type for dynamic map/object values")
             .coercing(new Coercing<JsonNode, String>() {
                 @Override
-                public String serialize(Object dataFetcherResult) throws CoercingSerializeException {
+                public String serialize(Object dataFetcherResult, GraphQLContext context, Locale locale) throws CoercingSerializeException {
                     if (dataFetcherResult instanceof JsonNode) {
                         return dataFetcherResult.toString();
                     }
@@ -35,24 +39,30 @@ public class GraphQLScalarConfig {
                 }
 
                 @Override
-                public JsonNode parseValue(Object input) throws CoercingParseValueException {
-                    return parseLiteral(input);
+                public JsonNode parseValue(Object input, GraphQLContext context, Locale locale) throws CoercingParseValueException {
+                    if (input instanceof String s) {
+                        try {
+                            return objectMapper.readTree(s);
+                        } catch (IOException e) {
+                            throw new CoercingParseValueException("Failed to parse JSON string", e);
+                        }
+                    }
+                    if (input instanceof java.util.Map) {
+                        return objectMapper.convertValue(input, JsonNode.class);
+                    }
+                    throw new CoercingParseValueException("Expected JSON string or map");
                 }
 
                 @Override
-                public JsonNode parseLiteral(Object input) throws CoercingParseLiteralException {
-                    if (input instanceof StringValue) {
+                public JsonNode parseLiteral(Value<?> input, CoercedVariables variables, GraphQLContext context, Locale locale) throws CoercingParseLiteralException {
+                    if (input instanceof StringValue stringValue) {
                         try {
-                            return objectMapper.readTree(((StringValue) input).getValue());
+                            return objectMapper.readTree((stringValue.getValue()));
                         } catch (IOException e) {
                             throw new CoercingParseLiteralException("Failed to parse JSON string", e);
                         }
                     }
-                    // For input objects (maps), convert to JsonNode
-                    if (input instanceof java.util.Map) {
-                        return objectMapper.convertValue(input, JsonNode.class);
-                    }
-                    throw new CoercingParseLiteralException("Expected JSON string or object");
+                    throw new CoercingParseLiteralException("Expected JSON string literal");
                 }
             })
             .build();

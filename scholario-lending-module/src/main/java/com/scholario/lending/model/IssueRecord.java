@@ -59,7 +59,7 @@ public class IssueRecord {
         if (state == null) {
             state = new Requested();
         }
-        if (stateType == null && state != null) {
+        if (stateType == null) {
             stateType = state.name();
         }
         if (renewalCount == null) {
