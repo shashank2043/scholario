@@ -29,6 +29,7 @@ class ReservationServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        reservationService.setSelf(reservationService);
     }
 
     @Test

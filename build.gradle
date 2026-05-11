@@ -53,5 +53,10 @@ subprojects {
 
 	test {
 		useJUnitPlatform()
+		if (project.hasProperty('useMockitoAgent')) {
+			jvmArgs("-javaagent:${configurations.testRuntimeClasspath.find { it.name.contains('mockito-core') }?.absolutePath}")
+		} else {
+			jvmArgs("-XX:+EnableDynamicAgentLoading")
+		}
 	}
 }

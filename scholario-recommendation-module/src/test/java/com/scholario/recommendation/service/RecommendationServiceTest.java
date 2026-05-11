@@ -1,5 +1,6 @@
 package com.scholario.recommendation.service;
 
+import com.scholario.analytics.service.AnalyticsService;
 import com.scholario.book.model.Book;
 import com.scholario.book.repository.BookRepository;
 import com.scholario.course.model.Course;
@@ -37,15 +38,15 @@ class RecommendationServiceTest {
     private CourseMaterialRepository courseMaterialRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private AnalyticsService analyticsService;
 
     @InjectMocks
     private RecommendationService recommendationService;
 
     @Test
     void recommendBooks_ShouldReturnRecommendations() {
-        User user = new User();
-        user.setId(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.existsById(1L)).thenReturn(true);
         when(issueRecordRepository.findByUserId(1L)).thenReturn(Collections.emptyList());
         
         Book book = new Book();
@@ -62,7 +63,7 @@ class RecommendationServiceTest {
 
     @Test
     void recommendBooks_ShouldThrowException_WhenUserNotFound() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.existsById(1L)).thenReturn(false);
 
         assertThrows(IllegalArgumentException.class, () -> recommendationService.recommendBooks(1L));
     }

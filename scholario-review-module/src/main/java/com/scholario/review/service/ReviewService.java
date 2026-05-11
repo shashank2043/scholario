@@ -79,8 +79,8 @@ public class ReviewService {
         reviewRecord.setFeedback(feedback);
         ReviewRecord savedRecord = reviewRecordRepository.save(reviewRecord);
 
-        // Transition Book back to DRAFT for revision
-        bookService.updateBookState(reviewRecord.getBookId(), new Draft());
+        // Final rejection leads to archiving
+        bookService.archiveBook(reviewRecord.getBookId());
 
         addHistory(savedRecord, new Rejected(), feedback, reviewRecord.getReviewerId());
 

@@ -10,6 +10,7 @@ import com.scholario.content.model.DigitalContent;
 import com.scholario.content.repository.ContentAccessLogRepository;
 import com.scholario.content.repository.DigitalContentRepository;
 import com.scholario.course.model.Course;
+import com.scholario.course.model.CourseMaterial;
 import com.scholario.course.repository.CourseMaterialRepository;
 import com.scholario.course.repository.CourseRepository;
 import com.scholario.lending.repository.IssueRecordRepository;
@@ -54,12 +55,36 @@ public class AnalyticsService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found"));
 
-        long total = courseMaterialRepository.countByCourseId(courseId);
-        long mandatory = courseMaterialRepository.countByCourseIdAndMandatory(courseId, true);
+        List<CourseMaterial> materials = courseMaterialRepository.findByCourseId(courseId);
+        long total = materials.size();
+        long mandatory = materials.stream().filter(CourseMaterial::isMandatory).count();
         long optional = total - mandatory;
 
-        // Simplified average usage rate (mocking logic for example)
-        double usageRate = total == 0 ? 0.0 : 0.85; 
+        if (total == 0) {
+            return new CourseMaterialStats(courseId, course.getCourseCode(), 0, 0, 0, 0.0);
+        }
+
+        long usedMaterials = 0;
+        for (CourseMaterial material : materials) {
+            Long bookId = material.getBookId();
+            boolean hasUsage = issueRecordRepository.countByBookId(bookId) > 0 ||
+                               reservationRepository.countByBookId(bookId) > 0;
+
+            if (!hasUsage) {
+                List<Long> contentIds = digitalContentRepository.findByBookId(bookId).stream()
+                        .map(DigitalContent::getId)
+                        .toList();
+                if (!contentIds.isEmpty() && contentAccessLogRepository.countByContentIdIn(contentIds) > 0) {
+                    hasUsage = true;
+                }
+            }
+
+            if (hasUsage) {
+                usedMaterials++;
+            }
+        }
+
+        double usageRate = (double) usedMaterials / total;
 
         return new CourseMaterialStats(courseId, course.getCourseCode(), total, mandatory, optional, usageRate);
     }

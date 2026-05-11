@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,17 +89,33 @@ class AnalyticsServiceTest {
         course.setId(1L);
         course.setCourseCode("CS101");
 
+        com.scholario.course.model.CourseMaterial m1 = new com.scholario.course.model.CourseMaterial();
+        m1.setBookId(10L);
+        m1.setMandatory(true);
+
+        com.scholario.course.model.CourseMaterial m2 = new com.scholario.course.model.CourseMaterial();
+        m2.setBookId(11L);
+        m2.setMandatory(false);
+
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(courseMaterialRepository.countByCourseId(1L)).thenReturn(10L);
-        when(courseMaterialRepository.countByCourseIdAndMandatory(1L, true)).thenReturn(7L);
+        when(courseMaterialRepository.findByCourseId(1L)).thenReturn(List.of(m1, m2));
+        
+        // Material 1 has usage (issue)
+        when(issueRecordRepository.countByBookId(10L)).thenReturn(1L);
+        
+        // Material 2 has no usage initially
+        when(issueRecordRepository.countByBookId(11L)).thenReturn(0L);
+        when(reservationRepository.countByBookId(11L)).thenReturn(0L);
+        when(digitalContentRepository.findByBookId(11L)).thenReturn(Collections.emptyList());
 
         CourseMaterialStats stats = analyticsService.getCourseMaterialStats(1L);
 
         assertEquals(1L, stats.courseId());
         assertEquals("CS101", stats.courseCode());
-        assertEquals(10L, stats.totalMaterials());
-        assertEquals(7L, stats.mandatoryCount());
-        assertEquals(3L, stats.optionalCount());
+        assertEquals(2L, stats.totalMaterials());
+        assertEquals(1L, stats.mandatoryCount());
+        assertEquals(1L, stats.optionalCount());
+        assertEquals(0.5, stats.averageUsageRate());
     }
 
     @Test

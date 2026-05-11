@@ -40,6 +40,7 @@ class DigitalContentServiceTest {
 
     @BeforeEach
     void setUp() {
+        digitalContentService.setSelf(digitalContentService);
         content = DigitalContent.builder()
                 .id(1L)
                 .bookId(10L)
