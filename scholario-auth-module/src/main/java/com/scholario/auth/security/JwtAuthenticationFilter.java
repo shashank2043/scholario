@@ -51,7 +51,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                 }
             } catch (Exception e) {
-                jwtLogger.warn("JWT validation failed: {}", e.getMessage());
+                if (e.getMessage() != null && e.getMessage().contains("Algorithm doesn't match")) {
+                    jwtLogger.debug("Skipping local JWT validation: Token is likely an RSA/Keycloak token.");
+                } else {
+                    jwtLogger.warn("JWT validation failed: {}", e.getMessage());
+                }
             }
         }
         

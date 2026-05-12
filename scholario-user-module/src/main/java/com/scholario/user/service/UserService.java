@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Set<String> syncedUsers = ConcurrentHashMap.newKeySet();
 
     @Transactional
     public User registerUser(UserInput input) {
@@ -92,5 +96,33 @@ public class UserService {
         department.setName(input.name());
         department.setCode(input.code());
         return departmentRepository.save(department);
+    }
+
+    @Transactional
+    public void syncUserFromExternalProvider(String username, String email, String fullName, List<String> roles) {
+        if (syncedUsers.contains(username)) {
+            return;
+        }
+
+        if (userRepository.findByUsername(username).isEmpty()) {
+            User user = new User();
+            user.setUsername(username);
+            user.setEmail(email != null ? email : username + "@scholario.local");
+            user.setFullName(fullName != null ? fullName : username);
+            user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+
+            Role userRole = Role.STUDENT;
+            if (roles != null) {
+                for (String r : roles) {
+                    try {
+                        userRole = Role.valueOf(r.toUpperCase());
+                        break;
+                    } catch (IllegalArgumentException ignored) {}
+                }
+            }
+            user.setRole(userRole);
+            userRepository.save(user);
+        }
+        syncedUsers.add(username);
     }
 }
