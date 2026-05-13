@@ -149,6 +149,17 @@ mutation CreateBook($input: BookInput!) {
 }
 ```
 
+**Variables:**
+```json
+{
+  "input": {
+    "title": "Introduction to Algorithms",
+    "isbn": "978-0262033848",
+    "description": "A comprehensive guide to algorithms"
+  }
+}
+```
+
 ### [3.2] Publish Book
 **Query:**
 ```graphql

@@ -63,10 +63,11 @@ public class AuthService {
     public TokenValidationResponse validateToken(String token) {
         try {
             DecodedJWT decodedJWT = jwtService.validateToken(token);
+            String roles = String.join(",", decodedJWT.getClaim("roles").asArray(String.class));
             return new TokenValidationResponse(
                     true,
                     decodedJWT.getSubject(),
-                    decodedJWT.getClaim("role").asString(),
+                    roles,
                     decodedJWT.getExpiresAt().toString()
             );
         } catch (Exception e) {

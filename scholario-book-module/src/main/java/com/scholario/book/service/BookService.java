@@ -9,6 +9,7 @@ import com.scholario.user.model.User;
 import com.scholario.user.repository.UserRepository;
 import com.scholario.notification.model.NotificationType;
 import com.scholario.notification.service.NotificationService;
+import com.scholario.user.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +24,16 @@ public class BookService {
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final UserService userService;
 
-    public BookService(BookRepository bookRepository, UserRepository userRepository, NotificationService notificationService) {
+    public BookService(BookRepository bookRepository, 
+                       UserRepository userRepository, 
+                       NotificationService notificationService,
+                       UserService userService) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.userService = userService;
     }
 
     // Queries
@@ -60,15 +66,18 @@ public class BookService {
                 .orElseGet(List::of);
     }
 
+    public List<Book> getAllBooks() {
+        return bookRepository.findAll();
+    }
+
     // Mutations
 
     public Book createBook(BookInput input) {
-        // Faculty ownership validation
-        User faculty = userRepository.findById(input.facultyId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + input.facultyId()));
+        // Faculty context retrieval
+        User faculty = userService.getCurrentUser();
 
         if (!faculty.getRoles().contains(Role.FACULTY)) {
-            throw new IllegalArgumentException("User with id " + input.facultyId() + " is not a Faculty member");
+            throw new IllegalArgumentException("Only users with the Faculty role can create books");
         }
 
         if (bookRepository.findByIsbn(input.isbn()).isPresent()) {
@@ -78,7 +87,7 @@ public class BookService {
         Book book = new Book();
         book.setTitle(input.title());
         book.setIsbn(input.isbn());
-        book.setFacultyId(input.facultyId());
+        book.setFacultyId(faculty.getId());
         book.setDescription(input.description());
         book.setState(new Draft());
         book.setVersionNumber(1);

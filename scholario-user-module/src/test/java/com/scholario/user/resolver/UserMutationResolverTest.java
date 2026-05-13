@@ -12,6 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,7 +29,7 @@ class UserMutationResolverTest {
 
     @Test
     void registerUser_Success() {
-        UserInput input = new UserInput("user", "email", "name", "pass", Role.STUDENT);
+        UserInput input = new UserInput("user", "email", "name", "pass");
         User user = new User();
         when(userService.registerUser(input)).thenReturn(user);
 

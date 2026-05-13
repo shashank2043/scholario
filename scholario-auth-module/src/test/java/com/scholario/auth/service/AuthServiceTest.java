@@ -45,7 +45,7 @@ class AuthServiceTest {
         testUser.setUsername("testuser");
         testUser.setPassword("encodedPassword");
         testUser.setEmail("test@example.com");
-        testUser.setRole(Role.STUDENT);
+        testUser.setRoles(java.util.Set.of(Role.STUDENT));
     }
 
     @Test
@@ -105,14 +105,16 @@ class AuthServiceTest {
         DecodedJWT decodedJWT = mock(DecodedJWT.class);
         when(jwtService.validateToken(token)).thenReturn(decodedJWT);
         when(decodedJWT.getSubject()).thenReturn("testuser");
-        when(decodedJWT.getClaim("role")).thenReturn(mock(com.auth0.jwt.interfaces.Claim.class));
-        when(decodedJWT.getClaim("role").asString()).thenReturn("STUDENT");
+        com.auth0.jwt.interfaces.Claim rolesClaim = mock(com.auth0.jwt.interfaces.Claim.class);
+        when(decodedJWT.getClaim("roles")).thenReturn(rolesClaim);
+        when(rolesClaim.asArray(String.class)).thenReturn(new String[]{"STUDENT"});
         when(decodedJWT.getExpiresAt()).thenReturn(new Date());
 
         TokenValidationResponse response = authService.validateToken(token);
 
         assertTrue(response.valid());
         assertEquals("testuser", response.username());
+        assertEquals("STUDENT", response.role());
     }
 
     @Test

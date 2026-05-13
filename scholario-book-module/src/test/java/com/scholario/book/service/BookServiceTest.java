@@ -7,6 +7,7 @@ import com.scholario.notification.service.NotificationService;
 import com.scholario.user.model.Role;
 import com.scholario.user.model.User;
 import com.scholario.user.repository.UserRepository;
+import com.scholario.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,9 @@ class BookServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private BookService bookService;
 
@@ -42,7 +46,7 @@ class BookServiceTest {
     void setUp() {
         faculty = new User();
         faculty.setId(1L);
-        faculty.setRole(Role.FACULTY);
+        faculty.setRoles(java.util.Set.of(Role.FACULTY));
 
         book = new Book();
         book.setId(1L);
@@ -54,8 +58,8 @@ class BookServiceTest {
 
     @Test
     void createBook_Success() {
-        BookInput input = new BookInput("Test Book", "1234567890", 1L, "Description");
-        when(userRepository.findById(1L)).thenReturn(Optional.of(faculty));
+        BookInput input = new BookInput("Test Book", "1234567890", "Description");
+        when(userService.getCurrentUser()).thenReturn(faculty);
         when(bookRepository.findByIsbn("1234567890")).thenReturn(Optional.empty());
         when(bookRepository.save(any(Book.class))).thenReturn(book);
 
@@ -67,9 +71,9 @@ class BookServiceTest {
 
     @Test
     void createBook_Failure_NotFaculty() {
-        faculty.setRole(Role.STUDENT);
-        BookInput input = new BookInput("Test Book", "1234567890", 1L, "Description");
-        when(userRepository.findById(1L)).thenReturn(Optional.of(faculty));
+        faculty.setRoles(java.util.Set.of(Role.STUDENT));
+        BookInput input = new BookInput("Test Book", "1234567890", "Description");
+        when(userService.getCurrentUser()).thenReturn(faculty);
 
         assertThrows(IllegalArgumentException.class, () -> bookService.createBook(input));
     }
@@ -89,7 +93,7 @@ class BookServiceTest {
     @Test
     void updateBook_Failure_WhenPublished() {
         book.setState(new Published());
-        BookInput input = new BookInput("New Title", "1234567890", 1L, "New Description");
+        BookInput input = new BookInput("New Title", "1234567890", "New Description");
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
 
         assertThrows(IllegalStateException.class, () -> bookService.updateBook(1L, input));

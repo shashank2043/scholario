@@ -22,8 +22,5 @@ public record UserInput (
 
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters long")
-    String password,
-
-    @NotNull(message = "Roles are required")
-    Set<Role> roles
+    String password
 ){}

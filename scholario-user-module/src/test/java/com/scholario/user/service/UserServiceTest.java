@@ -46,19 +46,20 @@ class UserServiceTest {
         user.setUsername("testuser");
         user.setEmail("test@test.com");
         user.setFullName("Test User");
-        user.setRole(Role.STUDENT);
+        user.setRoles(new java.util.HashSet<>(java.util.Set.of(Role.UNASSIGNED)));
     }
 
     @Test
     void registerUser_Success() {
-        UserInput input = new UserInput("testuser", "test@test.com", "Test User", "password", Role.STUDENT);
+        UserInput input = new UserInput("testuser", "test@test.com", "Test User", "password");
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         User registeredUser = userService.registerUser(input);
 
         assertNotNull(registeredUser);
         assertEquals("testuser", registeredUser.getUsername());
+        assertTrue(registeredUser.getRoles().contains(Role.UNASSIGNED));
         verify(userRepository).save(any(User.class));
     }
 
@@ -81,12 +82,13 @@ class UserServiceTest {
 
         User updatedUser = userService.assignRole(1L, Role.ADMIN);
 
-        assertEquals(Role.ADMIN, updatedUser.getRole());
+        assertTrue(updatedUser.getRoles().contains(Role.ADMIN));
+        assertFalse(updatedUser.getRoles().contains(Role.UNASSIGNED));
     }
 
     @Test
     void linkFacultyToDepartment_Success() {
-        user.setRole(Role.FACULTY);
+        user.setRoles(new java.util.HashSet<>(java.util.Set.of(Role.FACULTY)));
         Department dept = new Department();
         dept.setId(1L);
         dept.setName("Computer Science");
@@ -102,7 +104,7 @@ class UserServiceTest {
 
     @Test
     void linkFacultyToDepartment_Failure_NotFaculty() {
-        user.setRole(Role.STUDENT);
+        user.setRoles(new java.util.HashSet<>(java.util.Set.of(Role.STUDENT)));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         assertThrows(RuntimeException.class, () -> userService.linkFacultyToDepartment(1L, 1L));

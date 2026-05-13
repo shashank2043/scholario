@@ -24,7 +24,7 @@ class BookMutationResolverTest {
 
     @Test
     void createBook_Success() {
-        BookInput input = new BookInput("Title", "ISBN", 1L, "Desc");
+        BookInput input = new BookInput("Title", "ISBN", "Desc");
         Book book = new Book();
         when(bookService.createBook(input)).thenReturn(book);
 
