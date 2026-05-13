@@ -1,5 +1,5 @@
 extend type Query {
-    recommendBooks(userId: ID!): [BookRecommendation]
+    recommendBooks: [BookRecommendation]
     suggestCourseMaterials(courseId: ID!): [CourseMaterialSuggestion]
     predictDemand: [DemandPrediction]
 }

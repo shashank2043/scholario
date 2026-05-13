@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.Set;
+
 public record UserInput (
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
@@ -22,6 +24,6 @@ public record UserInput (
     @Size(min = 6, message = "Password must be at least 6 characters long")
     String password,
 
-    @NotNull(message = "Role is required")
-    Role role
+    @NotNull(message = "Roles are required")
+    Set<Role> roles
 ){}

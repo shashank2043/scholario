@@ -6,6 +6,7 @@ import com.scholario.book.service.BookService;
 import com.scholario.review.model.*;
 import com.scholario.review.repository.ReviewHistoryRepository;
 import com.scholario.review.repository.ReviewRecordRepository;
+import com.scholario.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,17 +21,24 @@ public class ReviewService {
     private final ReviewRecordRepository reviewRecordRepository;
     private final ReviewHistoryRepository reviewHistoryRepository;
     private final BookService bookService;
+    private final UserRepository userRepository;
 
     public ReviewService(ReviewRecordRepository reviewRecordRepository,
                          ReviewHistoryRepository reviewHistoryRepository,
-                         BookService bookService) {
+                         BookService bookService,
+                         UserRepository userRepository) {
         this.reviewRecordRepository = reviewRecordRepository;
         this.reviewHistoryRepository = reviewHistoryRepository;
         this.bookService = bookService;
+        this.userRepository = userRepository;
     }
 
     @Transactional
     public ReviewRecord submitBookForReview(Long bookId, Long reviewerId) {
+        if (!userRepository.existsById(reviewerId)) {
+            throw new IllegalArgumentException("Reviewer not found with id: " + reviewerId);
+        }
+
         // 1. Transition Book State to REVIEW
         bookService.submitForReview(bookId);
 
@@ -55,6 +63,7 @@ public class ReviewService {
     public ReviewRecord approveBook(Long requestId, String feedback) {
         ReviewRecord record = reviewRecordRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException(REVIEW_RECORD_NOT_FOUND));
+        validatePending(record);
 
         // 1. Update Review Record
         record.setStatus(new Approved());
@@ -74,6 +83,8 @@ public class ReviewService {
     public ReviewRecord rejectBook(Long requestId, String feedback) {
         ReviewRecord reviewRecord = reviewRecordRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException(REVIEW_RECORD_NOT_FOUND));
+        validatePending(reviewRecord);
+        validateFeedback(feedback);
 
         reviewRecord.setStatus(new Rejected());
         reviewRecord.setFeedback(feedback);
@@ -91,6 +102,8 @@ public class ReviewService {
     public ReviewRecord requestChanges(Long requestId, String feedback) {
         ReviewRecord reviewRecord = reviewRecordRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException(REVIEW_RECORD_NOT_FOUND));
+        validatePending(reviewRecord);
+        validateFeedback(feedback);
 
         reviewRecord.setStatus(new ChangesRequested());
         reviewRecord.setFeedback(feedback);
@@ -121,5 +134,17 @@ public class ReviewService {
         history.setFeedback(feedback);
         history.setPerformedBy(performedBy);
         reviewHistoryRepository.save(history);
+    }
+
+    private void validatePending(ReviewRecord reviewRecord) {
+        if (!(reviewRecord.getStatus() instanceof Pending)) {
+            throw new IllegalStateException("Review record must be pending");
+        }
+    }
+
+    private void validateFeedback(String feedback) {
+        if (feedback == null || feedback.isBlank()) {
+            throw new IllegalArgumentException("Feedback is required");
+        }
     }
 }

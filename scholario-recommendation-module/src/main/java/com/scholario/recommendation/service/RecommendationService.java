@@ -1,6 +1,5 @@
 package com.scholario.recommendation.service;
 
-import com.scholario.analytics.service.AnalyticsService;
 import com.scholario.book.repository.BookRepository;
 import com.scholario.course.model.Course;
 import com.scholario.course.repository.CourseMaterialRepository;
@@ -15,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,6 @@ public class RecommendationService {
     private final CourseRepository courseRepository;
     private final CourseMaterialRepository courseMaterialRepository;
     private final UserRepository userRepository;
-    private final AnalyticsService analyticsService;
 
     public List<BookRecommendation> recommendBooks(Long userId) {
         if (!userRepository.existsById(userId)) {
@@ -72,10 +72,15 @@ public class RecommendationService {
     public List<DemandPrediction> predictDemand() {
         // Logic: Use analytics to predict demand
         // Books with high reservation counts or frequent lending are high demand
+        Map<Long, Long> issueCountsByBook = issueRecordRepository.countIssuesByBook().stream()
+                .collect(Collectors.toMap(
+                        IssueRecordRepository.BookIssueCount::getBookId,
+                        IssueRecordRepository.BookIssueCount::getIssueCount));
+
         return bookRepository.findAll().stream()
                 .limit(10)
                 .map(b -> {
-                    long issues = issueRecordRepository.countByBookId(b.getId());
+                    long issues = issueCountsByBook.getOrDefault(b.getId(), 0L);
                     int predicted = (int) (issues * 1.2 + 5);
                     String risk = predicted > 20 ? "HIGH" : "LOW";
                     return new DemandPrediction(b.getId(), b.getTitle(), predicted, risk);

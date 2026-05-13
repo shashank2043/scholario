@@ -1,11 +1,14 @@
 package com.scholario.lending.service;
 
 import com.scholario.lending.dto.IssueInput;
+import com.scholario.lending.dto.BulkIssueInput;
 import com.scholario.lending.dto.ReturnInput;
 import com.scholario.lending.model.IssueRecord;
 import com.scholario.lending.model.Issued;
 import com.scholario.lending.model.Returned;
 import com.scholario.lending.repository.IssueRecordRepository;
+import com.scholario.book.repository.BookRepository;
+import com.scholario.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +29,10 @@ class IssueServiceTest {
 
     @Mock
     private IssueRecordRepository issueRecordRepository;
+    @Mock
+    private BookRepository bookRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private IssueService issueService;
@@ -45,6 +52,8 @@ class IssueServiceTest {
     @Test
     void issueBook_Success() {
         IssueInput input = new IssueInput(1L, 1L);
+        when(bookRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.existsById(1L)).thenReturn(true);
         when(issueRecordRepository.findByUserIdAndStateTypeNot(1L, "RETURNED")).thenReturn(List.of());
         when(issueRecordRepository.findByBookId(1L)).thenReturn(List.of());
         when(issueRecordRepository.save(any(IssueRecord.class))).thenReturn(issueRecord);
@@ -58,6 +67,8 @@ class IssueServiceTest {
     @Test
     void issueBook_Failure_MaxBooks() {
         IssueInput input = new IssueInput(1L, 1L);
+        when(bookRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.existsById(1L)).thenReturn(true);
         when(issueRecordRepository.findByUserIdAndStateTypeNot(1L, "RETURNED"))
                 .thenReturn(List.of(new IssueRecord(), new IssueRecord(), new IssueRecord(), new IssueRecord(), new IssueRecord()));
 
@@ -83,5 +94,17 @@ class IssueServiceTest {
         when(issueRecordRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(issueRecord));
 
         assertThrows(IllegalStateException.class, () -> issueService.returnBook(input));
+    }
+
+    @Test
+    void bulkIssueBooks_Failure_WhenBookAlreadyIssued() {
+        BulkIssueInput input = new BulkIssueInput(List.of(1L), 1L);
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(bookRepository.existsById(1L)).thenReturn(true);
+        when(issueRecordRepository.findByUserIdAndStateTypeNot(1L, "RETURNED")).thenReturn(List.of());
+        when(issueRecordRepository.findByBookId(1L)).thenReturn(List.of(issueRecord));
+
+        assertThrows(IllegalStateException.class, () -> issueService.bulkIssueBooks(input));
+        verify(issueRecordRepository, never()).save(any(IssueRecord.class));
     }
 }

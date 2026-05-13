@@ -6,13 +6,14 @@ type Query {
 
     # User Queries
     getUserById(id: ID!): User
+    getMyProfile: User
     getFacultyList: [User]
     getStudentList: [User]
     getDepartments: [Department]
 
     # Reservation Queries
     getReservationQueue(bookId: ID!): [Reservation]
-    getUserReservations(userId: ID!): [Reservation]
+    getUserReservations: [Reservation]
     getCourseById(id: ID!): Course
     getCoursesByFaculty(facultyId: ID!): [Course]
     getCourseMaterials(courseId: ID!): [CourseMaterial]
@@ -23,9 +24,9 @@ type Query {
     getReviewHistory(bookId: ID!): [ReviewHistory]
 
     # Notification Queries
-    getNotificationsByUser(userId: ID!): [Notification]
-    getUnreadNotifications(userId: ID!): [Notification]
-    getUnreadNotificationCount(userId: ID!): Int
+    getMyNotifications: [Notification]
+    getUnreadNotifications: [Notification]
+    getUnreadNotificationCount: Int
 }
 
 type Mutation {
@@ -38,12 +39,12 @@ type Mutation {
 
     # User Mutations
     registerUser(input: UserInput!): User
-    updateUserProfile(id: ID!, input: ProfileInput!): User
+    updateUserProfile(input: ProfileInput!): User
     assignRole(userId: ID!, role: Role!): User
     linkFacultyToDepartment(facultyId: ID!, departmentId: ID!): User
 
     # Reservation Mutations
-    reserveBook(input: ReservationInput!): Reservation
+    reserveBook(bookId: ID!): Reservation
     cancelReservation(reservationId: ID!): Reservation
     allocateReservedBook(bookId: ID!): Reservation
     createCourse(input: CourseInput!): Course
@@ -60,7 +61,7 @@ type Mutation {
 
     # Notification Mutations
     markNotificationAsRead(id: ID!): Notification
-    markAllNotificationsAsRead(userId: ID!): Boolean
+    markAllNotificationsAsRead: Boolean
 }
 
 type Subscription {
@@ -109,7 +110,7 @@ type User {
     username: String
     email: String
     fullName: String
-    role: Role
+    roles: [Role]
     department: Department
     createdAt: String
     updatedAt: String
@@ -132,7 +133,7 @@ input UserInput {
     username: String!
     email: String!
     fullName: String!
-    role: Role!
+    roles: [Role!]!
     password: String!
 }
 

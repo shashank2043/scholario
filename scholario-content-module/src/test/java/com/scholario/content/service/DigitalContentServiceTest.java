@@ -1,5 +1,6 @@
 package com.scholario.content.service;
 
+import com.scholario.book.repository.BookRepository;
 import com.scholario.content.dto.DigitalContentInput;
 import com.scholario.content.model.ContentAccessLog;
 import com.scholario.content.model.ContentAccessType;
@@ -8,6 +9,7 @@ import com.scholario.content.model.UserContentAccess;
 import com.scholario.content.repository.ContentAccessLogRepository;
 import com.scholario.content.repository.DigitalContentRepository;
 import com.scholario.content.repository.UserContentAccessRepository;
+import com.scholario.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +33,10 @@ class DigitalContentServiceTest {
     private ContentAccessLogRepository contentAccessLogRepository;
     @Mock
     private UserContentAccessRepository userContentAccessRepository;
+    @Mock
+    private BookRepository bookRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private DigitalContentService digitalContentService;
@@ -40,7 +46,10 @@ class DigitalContentServiceTest {
 
     @BeforeEach
     void setUp() {
-        digitalContentService.setSelf(digitalContentService);
+        lenient().when(bookRepository.existsById(anyLong())).thenReturn(true);
+        lenient().when(digitalContentRepository.existsById(anyLong())).thenReturn(true);
+        lenient().when(userRepository.existsById(anyLong())).thenReturn(true);
+
         content = DigitalContent.builder()
                 .id(1L)
                 .bookId(10L)

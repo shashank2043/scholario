@@ -2,7 +2,7 @@ package com.scholario.lending.repository;
 
 import com.scholario.lending.model.IssueRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,4 +25,13 @@ public interface IssueRecordRepository extends JpaRepository<IssueRecord, Long> 
     long countByBookId(Long bookId);
 
     long countByUserId(Long userId);
+
+    @Query("SELECT i.bookId AS bookId, COUNT(i) AS issueCount FROM IssueRecord i GROUP BY i.bookId")
+    List<BookIssueCount> countIssuesByBook();
+
+    interface BookIssueCount {
+        Long getBookId();
+
+        long getIssueCount();
+    }
 }

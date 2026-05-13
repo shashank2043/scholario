@@ -38,14 +38,9 @@ public class BookService {
 
     public List<Book> searchBooks(String title, String isbn) {
         if (title != null && isbn != null) {
-            return bookRepository.findAll().stream()
-                    .filter(b -> b.getTitle().toLowerCase().contains(title.toLowerCase())
-                            && b.getIsbn().contains(isbn))
-                    .toList();
+            return bookRepository.findByTitleContainingIgnoreCaseAndIsbnContaining(title, isbn);
         } else if (title != null) {
-            return bookRepository.findAll().stream()
-                    .filter(b -> b.getTitle().toLowerCase().contains(title.toLowerCase()))
-                    .toList();
+            return bookRepository.findByTitleContainingIgnoreCase(title);
         } else if (isbn != null) {
             return bookRepository.findByIsbn(isbn)
                     .map(List::of)
@@ -59,15 +54,10 @@ public class BookService {
     }
 
     public List<Book> getBookVersions(Long bookId) {
-        Optional<Book> bookOpt = bookRepository.findById(bookId);
-        if (bookOpt.isEmpty()) {
-            return List.of();
-        }
-        Book book = bookOpt.get();
-        if (book.getParentBookId() != null) {
-            return bookRepository.findVersionsByParentBookId(book.getParentBookId());
-        }
-        return bookRepository.findVersionsByParentBookId(bookId);
+        return bookRepository.findById(bookId)
+                .map(book -> bookRepository.findVersionsByParentBookId(
+                        book.getParentBookId() != null ? book.getParentBookId() : bookId))
+                .orElseGet(List::of);
     }
 
     // Mutations
@@ -77,7 +67,7 @@ public class BookService {
         User faculty = userRepository.findById(input.facultyId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + input.facultyId()));
 
-        if (faculty.getRole() != Role.FACULTY) {
+        if (!faculty.getRoles().contains(Role.FACULTY)) {
             throw new IllegalArgumentException("User with id " + input.facultyId() + " is not a Faculty member");
         }
 
@@ -168,11 +158,7 @@ public class BookService {
     }
 
     public Book archiveBook(Long id) {
-        Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(BOOK_NOT_FOUND + id));
-
-        book.setState(new Archived());
-        return bookRepository.save(book);
+        return updateBookState(id, new Archived());
     }
 
     public Book versionBook(BookVersionInput input) {

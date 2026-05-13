@@ -1,6 +1,6 @@
 extend type Query {
-    getIssuedBooksByUser(userId: ID!): [IssueResponse]
-    getIssueHistory(userId: ID!): [IssueResponse]
+    getMyIssuedBooks: [IssueResponse]
+    getMyIssueHistory: [IssueResponse]
     getDueDates: [IssueResponse]
 }
 

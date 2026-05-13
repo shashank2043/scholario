@@ -34,7 +34,7 @@ public class JwtService {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         return JWT.create()
                 .withSubject(user.getUsername())
-                .withClaim("role", user.getRole().name())
+                .withArrayClaim("roles", user.getRoles().stream().map(Enum::name).toArray(String[]::new))
                 .withClaim("email", user.getEmail())
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + expirationMs))

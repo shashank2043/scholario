@@ -27,8 +27,8 @@ public class UserMutationResolver {
 
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
-    public User updateUserProfile(@Argument Long id, @Valid @Argument ProfileInput input) {
-        return userService.updateUserProfile(id, input);
+    public User updateUserProfile(@Valid @Argument ProfileInput input) {
+        return userService.updateUserProfile(userService.getCurrentUserId(), input);
     }
 
     @MutationMapping

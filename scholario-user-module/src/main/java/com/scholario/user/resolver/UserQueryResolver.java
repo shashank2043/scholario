@@ -24,6 +24,12 @@ public class UserQueryResolver {
     }
 
     @QueryMapping
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
+    public User getMyProfile() {
+        return userService.getCurrentUser();
+    }
+
+    @QueryMapping
     public List<User> getFacultyList() {
         return userService.getFacultyList();
     }
