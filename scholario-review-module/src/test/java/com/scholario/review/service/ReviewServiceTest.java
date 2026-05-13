@@ -7,6 +7,7 @@ import com.scholario.book.service.BookService;
 import com.scholario.review.model.*;
 import com.scholario.review.repository.ReviewHistoryRepository;
 import com.scholario.review.repository.ReviewRecordRepository;
+import com.scholario.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +34,8 @@ class ReviewServiceTest {
 
     @Mock
     private BookService bookService;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private ReviewService reviewService;
@@ -59,6 +62,8 @@ class ReviewServiceTest {
         reviewBook = new Book();
         reviewBook.setId(10L);
         reviewBook.setState(new Review());
+
+        lenient().when(userRepository.existsById(anyLong())).thenReturn(true);
     }
 
     // ========== submitBookForReview Tests ==========
@@ -196,6 +201,15 @@ class ReviewServiceTest {
     }
 
     @Test
+    void approveBook_ShouldThrowException_WhenRecordNotPending() {
+        existingRecord.setStatus(new Approved());
+        when(reviewRecordRepository.findById(1L)).thenReturn(Optional.of(existingRecord));
+
+        assertThrows(IllegalStateException.class, () -> reviewService.approveBook(1L, "feedback"));
+        verify(reviewRecordRepository, never()).save(any(ReviewRecord.class));
+    }
+
+    @Test
     void approveBook_ShouldAddHistoryEntry() {
         Long requestId = 1L;
         String feedback = "Approved";
@@ -257,6 +271,14 @@ class ReviewServiceTest {
         verify(reviewRecordRepository, times(1)).findById(requestId);
         verify(reviewRecordRepository, never()).save(any(ReviewRecord.class));
         verify(bookService, never()).archiveBook(anyLong());
+    }
+
+    @Test
+    void rejectBook_ShouldThrowException_WhenFeedbackBlank() {
+        when(reviewRecordRepository.findById(1L)).thenReturn(Optional.of(existingRecord));
+
+        assertThrows(IllegalArgumentException.class, () -> reviewService.rejectBook(1L, " "));
+        verify(reviewRecordRepository, never()).save(any(ReviewRecord.class));
     }
 
     @Test

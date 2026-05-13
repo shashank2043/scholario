@@ -5,6 +5,10 @@ import com.scholario.royalty.model.RoyaltyPolicy;
 import com.scholario.royalty.model.RoyaltyRecord;
 import com.scholario.royalty.repository.RoyaltyPolicyRepository;
 import com.scholario.royalty.repository.RoyaltyRecordRepository;
+import com.scholario.book.repository.BookRepository;
+import com.scholario.user.model.Role;
+import com.scholario.user.model.User;
+import com.scholario.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,14 +21,25 @@ import java.util.List;
 public class RoyaltyService {
     private final RoyaltyPolicyRepository policyRepository;
     private final RoyaltyRecordRepository recordRepository;
+    private final BookRepository bookRepository;
+    private final UserRepository userRepository;
 
-    public RoyaltyService(RoyaltyPolicyRepository policyRepository, RoyaltyRecordRepository recordRepository) {
+    public RoyaltyService(RoyaltyPolicyRepository policyRepository,
+                          RoyaltyRecordRepository recordRepository,
+                          BookRepository bookRepository,
+                          UserRepository userRepository) {
         this.policyRepository = policyRepository;
         this.recordRepository = recordRepository;
+        this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
     public RoyaltyPolicy defineRoyaltyPolicy(RoyaltyPolicyInput input) {
+        validateBookExists(input.bookId());
+        validateFaculty(input.facultyId());
+        validateRoyaltyPercentage(input.royaltyPercentage());
+
         RoyaltyPolicy policy = policyRepository.findByBookId(input.bookId())
                 .orElse(new RoyaltyPolicy());
 
@@ -38,10 +53,15 @@ public class RoyaltyService {
 
     @Transactional
     public RoyaltyRecord calculateRoyalty(Long bookId, BigDecimal totalRevenue) {
-        RoyaltyPolicy policy = policyRepository.findByBookId(bookId)
-                .orElseThrow(() -> new RuntimeException("Royalty policy not found for book: " + bookId));
+        validateBookExists(bookId);
+        if (totalRevenue == null || totalRevenue.signum() < 0) {
+            throw new IllegalArgumentException("Total revenue cannot be negative");
+        }
 
-        // Formula: Royalty = Total Revenue × Royalty Percentage / 100
+        RoyaltyPolicy policy = policyRepository.findByBookId(bookId)
+                .orElseThrow(() -> new IllegalArgumentException("Royalty policy not found for book: " + bookId));
+
+        // Formula: Royalty = Total Revenue x Royalty Percentage / 100
         BigDecimal royaltyAmount = totalRevenue.multiply(policy.getRoyaltyPercentage())
                 .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
 
@@ -58,7 +78,7 @@ public class RoyaltyService {
     @Transactional
     public RoyaltyRecord distributeRoyalty(Long recordId) {
         RoyaltyRecord record = recordRepository.findById(recordId)
-                .orElseThrow(() -> new RuntimeException("Royalty record not found: " + recordId));
+                .orElseThrow(() -> new IllegalArgumentException("Royalty record not found: " + recordId));
 
         record.setPayoutStatus("COMPLETED");
         record.setDistributedAt(LocalDateTime.now());
@@ -74,5 +94,27 @@ public class RoyaltyService {
         return recordRepository.findByBookId(bookId).stream()
                 .map(RoyaltyRecord::getTotalRevenue)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private void validateBookExists(Long bookId) {
+        if (!bookRepository.existsById(bookId)) {
+            throw new IllegalArgumentException("Book not found with id: " + bookId);
+        }
+    }
+
+    private void validateFaculty(Long facultyId) {
+        User faculty = userRepository.findById(facultyId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + facultyId));
+        if (faculty.getRole() != Role.FACULTY) {
+            throw new IllegalArgumentException("User with id " + facultyId + " is not a Faculty member");
+        }
+    }
+
+    private void validateRoyaltyPercentage(BigDecimal royaltyPercentage) {
+        if (royaltyPercentage == null
+                || royaltyPercentage.signum() < 0
+                || royaltyPercentage.compareTo(new BigDecimal("100")) > 0) {
+            throw new IllegalArgumentException("Royalty percentage must be between 0 and 100");
+        }
     }
 }

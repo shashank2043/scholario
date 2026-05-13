@@ -1,10 +1,14 @@
 package com.scholario.royalty.service;
 
+import com.scholario.book.repository.BookRepository;
 import com.scholario.royalty.dto.RoyaltyPolicyInput;
 import com.scholario.royalty.model.RoyaltyPolicy;
 import com.scholario.royalty.model.RoyaltyRecord;
 import com.scholario.royalty.repository.RoyaltyPolicyRepository;
 import com.scholario.royalty.repository.RoyaltyRecordRepository;
+import com.scholario.user.model.Role;
+import com.scholario.user.model.User;
+import com.scholario.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +33,10 @@ class RoyaltyServiceTest {
 
     @Mock
     private RoyaltyRecordRepository recordRepository;
+    @Mock
+    private BookRepository bookRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private RoyaltyService royaltyService;
@@ -39,6 +47,12 @@ class RoyaltyServiceTest {
 
     @BeforeEach
     void setUp() {
+        User faculty = new User();
+        faculty.setId(2L);
+        faculty.setRole(Role.FACULTY);
+        lenient().when(bookRepository.existsById(anyLong())).thenReturn(true);
+        lenient().when(userRepository.findById(2L)).thenReturn(Optional.of(faculty));
+
         existingPolicy = new RoyaltyPolicy();
         existingPolicy.setId(1L);
         existingPolicy.setBookId(1L);
@@ -116,6 +130,14 @@ class RoyaltyServiceTest {
     }
 
     @Test
+    void defineRoyaltyPolicy_ShouldThrowException_WhenPercentageOutOfRange() {
+        RoyaltyPolicyInput input = new RoyaltyPolicyInput(1L, 2L, new BigDecimal("101.0"), null);
+
+        assertThrows(IllegalArgumentException.class, () -> royaltyService.defineRoyaltyPolicy(input));
+        verify(policyRepository, never()).save(any(RoyaltyPolicy.class));
+    }
+
+    @Test
     void calculateRoyalty_ShouldCalculateAndSaveRecord() {
         Long bookId = 1L;
         BigDecimal totalRevenue = new BigDecimal("1000.00");
@@ -166,6 +188,13 @@ class RoyaltyServiceTest {
         assertEquals("Royalty policy not found for book: 99", exception.getMessage());
         verify(policyRepository, times(1)).findByBookId(bookId);
         verify(recordRepository, never()).save(any(RoyaltyRecord.class));
+    }
+
+    @Test
+    void calculateRoyalty_ShouldThrowException_WhenRevenueNegative() {
+        assertThrows(IllegalArgumentException.class,
+                () -> royaltyService.calculateRoyalty(1L, new BigDecimal("-1.00")));
+        verify(policyRepository, never()).findByBookId(anyLong());
     }
 
     @Test

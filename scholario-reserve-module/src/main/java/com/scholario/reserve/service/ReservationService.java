@@ -2,6 +2,8 @@ package com.scholario.reserve.service;
 
 import com.scholario.reserve.model.*;
 import com.scholario.reserve.repository.ReservationRepository;
+import com.scholario.book.repository.BookRepository;
+import com.scholario.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,21 +14,22 @@ import java.util.List;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private ReservationService self;
+    private final BookRepository bookRepository;
+    private final UserRepository userRepository;
 
-    public ReservationService(ReservationRepository reservationRepository) {
+    public ReservationService(ReservationRepository reservationRepository,
+                              BookRepository bookRepository,
+                              UserRepository userRepository) {
         this.reservationRepository = reservationRepository;
-    }
-
-    @org.springframework.beans.factory.annotation.Autowired
-    public void setSelf(@org.springframework.context.annotation.Lazy ReservationService self) {
-        this.self = self;
+        this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
     public Reservation reserveBook(Long bookId, Long userId) {
-        // In a real system, we'd check if the book exists and if it's already available
-        // But for this module, we just create a reservation.
+        validateBookExists(bookId);
+        validateUserExists(userId);
+
         Reservation reservation = new Reservation();
         reservation.setBookId(bookId);
         reservation.setUserId(userId);
@@ -40,10 +43,10 @@ public class ReservationService {
     @Transactional
     public Reservation cancelReservation(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Reservation not found with id: " + reservationId));
         
         if (!(reservation.getStatus() instanceof Pending)) {
-            throw new RuntimeException("Only pending reservations can be cancelled");
+            throw new IllegalStateException("Only pending reservations can be cancelled");
         }
 
         reservation.setStatus(new Cancelled());
@@ -52,30 +55,28 @@ public class ReservationService {
 
     @Transactional
     public Reservation allocateReservedBook(Long bookId) {
+        validateBookExists(bookId);
+
         // FIFO: Get all reservations for the book ordered by date
         List<Reservation> allReservations = reservationRepository.findByBookIdOrderByReservedAtAsc(bookId);
-        
-        // Filter for Pending status
-        List<Reservation> queue = allReservations.stream()
-                .filter(r -> r.getStatus() instanceof Pending)
-                .toList();
-        
-        if (queue.isEmpty()) {
-            return null;
+
+        LocalDateTime now = LocalDateTime.now();
+        for (Reservation reservation : allReservations) {
+            if (!(reservation.getStatus() instanceof Pending)) {
+                continue;
+            }
+
+            if (reservation.getExpiresAt() != null && reservation.getExpiresAt().isBefore(now)) {
+                reservation.setStatus(new Expired());
+                reservationRepository.save(reservation);
+                continue;
+            }
+
+            reservation.setStatus(new Allocated());
+            return reservationRepository.save(reservation);
         }
 
-        Reservation first = queue.get(0);
-        
-        // Check for expiry (Simple auto-expiry check)
-        if (first.getExpiresAt() != null && first.getExpiresAt().isBefore(LocalDateTime.now())) {
-            first.setStatus(new Expired());
-            reservationRepository.save(first);
-            // Recursively try to allocate the next one
-            return self.allocateReservedBook(bookId);
-        }
-
-        first.setStatus(new Allocated());
-        return reservationRepository.save(first);
+        return null;
     }
 
     public List<Reservation> getReservationQueue(Long bookId) {
@@ -86,5 +87,17 @@ public class ReservationService {
 
     public List<Reservation> getUserReservations(Long userId) {
         return reservationRepository.findByUserId(userId);
+    }
+
+    private void validateBookExists(Long bookId) {
+        if (!bookRepository.existsById(bookId)) {
+            throw new IllegalArgumentException("Book not found with id: " + bookId);
+        }
+    }
+
+    private void validateUserExists(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found with id: " + userId);
+        }
     }
 }

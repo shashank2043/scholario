@@ -37,13 +37,15 @@ spring:
       path: /h2-console
 
   security:
+    keycloak:
+      enabled: ${KEYCLOAK_ENABLED:true}
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/scholario}
 
 server:
-  port: 8080
+  port: 8090
 
 logging:
   level:

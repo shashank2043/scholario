@@ -9,6 +9,9 @@ import com.scholario.course.model.Course;
 import com.scholario.course.model.CourseMaterial;
 import com.scholario.course.repository.CourseMaterialRepository;
 import com.scholario.course.repository.CourseRepository;
+import com.scholario.user.model.Role;
+import com.scholario.user.model.User;
+import com.scholario.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +36,8 @@ class CourseServiceTest {
 
     @Mock
     private BookRepository bookRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private CourseService courseService;
@@ -50,6 +55,11 @@ class CourseServiceTest {
         book = new Book();
         book.setId(1L);
         book.setState(new Published());
+
+        User faculty = new User();
+        faculty.setId(1L);
+        faculty.setRole(Role.FACULTY);
+        lenient().when(userRepository.findById(1L)).thenReturn(Optional.of(faculty));
     }
 
     @Test

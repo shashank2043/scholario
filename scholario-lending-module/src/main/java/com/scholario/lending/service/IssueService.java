@@ -6,6 +6,8 @@ import com.scholario.lending.dto.RenewInput;
 import com.scholario.lending.dto.ReturnInput;
 import com.scholario.lending.model.*;
 import com.scholario.lending.repository.IssueRecordRepository;
+import com.scholario.book.repository.BookRepository;
+import com.scholario.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,8 @@ import java.util.Optional;
 public class IssueService {
 
     private final IssueRecordRepository issueRecordRepository;
+    private final BookRepository bookRepository;
+    private final UserRepository userRepository;
 
     private static final int MAX_BOOKS_PER_USER = 5;
     private static final int DEFAULT_ISSUE_DAYS = 14;
@@ -26,13 +30,19 @@ public class IssueService {
     private static final double PENALTY_PER_DAY = 1.0;
     private static final String STATE_RETURNED = "RETURNED";
 
-    public IssueService(IssueRecordRepository issueRecordRepository) {
+    public IssueService(IssueRecordRepository issueRecordRepository,
+                        BookRepository bookRepository,
+                        UserRepository userRepository) {
         this.issueRecordRepository = issueRecordRepository;
+        this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
     }
 
     // Mutations
 
     public IssueRecord issueBook(IssueInput input) {
+        validateBookAndUser(input.bookId(), input.userId());
+
         // Check max books per user
         List<IssueRecord> activeIssues = issueRecordRepository.findByUserIdAndStateTypeNot(input.userId(), STATE_RETURNED);
         if (activeIssues.size() >= MAX_BOOKS_PER_USER) {
@@ -107,6 +117,15 @@ public class IssueService {
     public List<IssueRecord> bulkIssueBooks(BulkIssueInput input) {
         List<IssueRecord> issued = new ArrayList<>();
 
+        if (!userRepository.existsById(input.userId())) {
+            throw new IllegalArgumentException("User not found with id: " + input.userId());
+        }
+        for (Long bookId : input.bookIds()) {
+            if (!bookRepository.existsById(bookId)) {
+                throw new IllegalArgumentException("Book not found with id: " + bookId);
+            }
+        }
+
         // Check max books per user
         List<IssueRecord> activeIssues = issueRecordRepository.findByUserIdAndStateTypeNot(input.userId(), STATE_RETURNED);
         int availableSlots = MAX_BOOKS_PER_USER - activeIssues.size();
@@ -120,7 +139,7 @@ public class IssueService {
             boolean isAlreadyIssued = bookIssues.stream()
                     .anyMatch(i -> !(i.getState() instanceof Returned));
             if (isAlreadyIssued) {
-                continue; // Skip already issued books
+                throw new IllegalStateException("Book is already issued: " + bookId);
             }
 
             LocalDateTime now = LocalDateTime.now();
@@ -166,6 +185,15 @@ public class IssueService {
                 issue.setPenaltyAmount(penalty);
                 issueRecordRepository.save(issue);
             }
+        }
+    }
+
+    private void validateBookAndUser(Long bookId, Long userId) {
+        if (!bookRepository.existsById(bookId)) {
+            throw new IllegalArgumentException("Book not found with id: " + bookId);
+        }
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found with id: " + userId);
         }
     }
 }

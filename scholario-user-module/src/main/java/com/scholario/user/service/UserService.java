@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,7 +44,7 @@ public class UserService {
     @Transactional
     public User updateUserProfile(Long id, ProfileInput input) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
         if (input.fullName() != null) {
             user.setFullName(input.fullName());
         }
@@ -55,7 +57,7 @@ public class UserService {
     @Transactional
     public User assignRole(Long userId, Role role) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
         user.setRole(role);
         return userRepository.save(user);
     }
@@ -63,19 +65,19 @@ public class UserService {
     @Transactional
     public User linkFacultyToDepartment(Long facultyId, Long departmentId) {
         User user = userRepository.findById(facultyId)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
         if (user.getRole() != Role.FACULTY) {
-            throw new RuntimeException("Only faculty can be linked to a department");
+            throw new IllegalStateException("Only faculty can be linked to a department");
         }
         Department department = departmentRepository.findById(departmentId)
-                .orElseThrow(() -> new RuntimeException("Department not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Department not found"));
         user.setDepartment(department);
         return userRepository.save(user);
     }
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
     }
 
     public List<User> getFacultyList() {
@@ -111,18 +113,29 @@ public class UserService {
             user.setFullName(fullName != null ? fullName : username);
             user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
 
-            Role userRole = Role.STUDENT;
-            if (roles != null) {
-                for (String r : roles) {
-                    try {
-                        userRole = Role.valueOf(r.toUpperCase());
-                        break;
-                    } catch (IllegalArgumentException ignored) {}
-                }
-            }
-            user.setRole(userRole);
+            user.setRole(resolveExternalRole(roles));
             userRepository.save(user);
         }
         syncedUsers.add(username);
+    }
+
+    private Role resolveExternalRole(List<String> roles) {
+        if (roles == null) {
+            return Role.STUDENT;
+        }
+
+        Optional<Role> firstAllowedRole = roles.stream()
+                .map(role -> role == null ? "" : role.trim().toUpperCase(Locale.ROOT))
+                .filter(role -> !role.isBlank())
+                .flatMap(role -> {
+                    try {
+                        return java.util.stream.Stream.of(Role.valueOf(role));
+                    } catch (IllegalArgumentException ignored) {
+                        return java.util.stream.Stream.empty();
+                    }
+                })
+                .findFirst();
+
+        return firstAllowedRole.orElse(Role.STUDENT);
     }
 }

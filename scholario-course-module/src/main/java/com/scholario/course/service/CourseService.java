@@ -8,6 +8,9 @@ import com.scholario.course.model.Course;
 import com.scholario.course.model.CourseMaterial;
 import com.scholario.course.repository.CourseMaterialRepository;
 import com.scholario.course.repository.CourseRepository;
+import com.scholario.user.model.Role;
+import com.scholario.user.model.User;
+import com.scholario.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,18 +24,23 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final CourseMaterialRepository courseMaterialRepository;
     private final BookRepository bookRepository;
+    private final UserRepository userRepository;
 
     public CourseService(CourseRepository courseRepository,
                          CourseMaterialRepository courseMaterialRepository,
-                         BookRepository bookRepository) {
+                         BookRepository bookRepository,
+                         UserRepository userRepository) {
         this.courseRepository = courseRepository;
         this.courseMaterialRepository = courseMaterialRepository;
         this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
     }
 
     // Course operations
 
     public Course createCourse(CourseInput input) {
+        validateFaculty(input.facultyId());
+
         if (courseRepository.findByCourseCode(input.courseCode()).isPresent()) {
             throw new IllegalArgumentException("Course with code " + input.courseCode() + " already exists");
         }
@@ -57,6 +65,7 @@ public class CourseService {
             course.setDescription(input.description());
         }
         if (input.facultyId() != null) {
+            validateFaculty(input.facultyId());
             course.setFacultyId(input.facultyId());
         }
 
@@ -136,5 +145,13 @@ public class CourseService {
     public List<Book> getBooksByCourse(Long courseId) {
         List<Long> bookIds = courseMaterialRepository.findBookIdsByCourseId(courseId);
         return bookRepository.findAllById(bookIds);
+    }
+
+    private void validateFaculty(Long facultyId) {
+        User faculty = userRepository.findById(facultyId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + facultyId));
+        if (faculty.getRole() != Role.FACULTY) {
+            throw new IllegalArgumentException("User with id " + facultyId + " is not a Faculty member");
+        }
     }
 }

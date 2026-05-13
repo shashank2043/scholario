@@ -1,7 +1,9 @@
 package com.scholario.reserve.service;
 
+import com.scholario.book.repository.BookRepository;
 import com.scholario.reserve.model.*;
 import com.scholario.reserve.repository.ReservationRepository;
+import com.scholario.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,6 +24,10 @@ class ReservationServiceTest {
 
     @Mock
     private ReservationRepository reservationRepository;
+    @Mock
+    private BookRepository bookRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private ReservationService reservationService;
@@ -29,7 +35,8 @@ class ReservationServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        reservationService.setSelf(reservationService);
+        lenient().when(bookRepository.existsById(anyLong())).thenReturn(true);
+        lenient().when(userRepository.existsById(anyLong())).thenReturn(true);
     }
 
     @Test
@@ -52,6 +59,14 @@ class ReservationServiceTest {
         assertEquals(userId, result.getUserId());
         assertTrue(result.getStatus() instanceof Pending);
         verify(reservationRepository, times(1)).save(any(Reservation.class));
+    }
+
+    @Test
+    void testReserveBook_BookNotFound() {
+        when(bookRepository.existsById(1L)).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> reservationService.reserveBook(1L, 2L));
+        verify(reservationRepository, never()).save(any(Reservation.class));
     }
 
     @Test
@@ -110,11 +125,8 @@ class ReservationServiceTest {
         valid.setExpiresAt(LocalDateTime.now().plusDays(1));
         valid.setStatus(new Pending());
 
-        // First call returns [expired, valid]
-        // Second call (recursive) returns [valid]
         when(reservationRepository.findByBookIdOrderByReservedAtAsc(bookId))
-                .thenReturn(Arrays.asList(expired, valid))
-                .thenReturn(Collections.singletonList(valid));
+                .thenReturn(Arrays.asList(expired, valid));
         
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

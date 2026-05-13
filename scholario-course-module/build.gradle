@@ -1,6 +1,7 @@
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation project(':scholario-book-module')
+    implementation project(':scholario-user-module')
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-graphql'
     runtimeOnly 'com.mysql:mysql-connector-j'

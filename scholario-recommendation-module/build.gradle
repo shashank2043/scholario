@@ -3,7 +3,6 @@ dependencies {
     implementation project(':scholario-user-module')
     implementation project(':scholario-course-module')
     implementation project(':scholario-lending-module')
-    implementation project(':scholario-analytics-module')
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-graphql'

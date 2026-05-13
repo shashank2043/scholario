@@ -1,6 +1,5 @@
 package com.scholario.recommendation.service;
 
-import com.scholario.analytics.service.AnalyticsService;
 import com.scholario.book.model.Book;
 import com.scholario.book.repository.BookRepository;
 import com.scholario.course.model.Course;
@@ -38,8 +37,6 @@ class RecommendationServiceTest {
     private CourseMaterialRepository courseMaterialRepository;
     @Mock
     private UserRepository userRepository;
-    @Mock
-    private AnalyticsService analyticsService;
 
     @InjectMocks
     private RecommendationService recommendationService;
@@ -102,7 +99,10 @@ class RecommendationServiceTest {
         book.setId(30L);
         book.setTitle("SQL Pro");
         when(bookRepository.findAll()).thenReturn(List.of(book));
-        when(issueRecordRepository.countByBookId(30L)).thenReturn(25L);
+        IssueRecordRepository.BookIssueCount issueCount = mock(IssueRecordRepository.BookIssueCount.class);
+        when(issueCount.getBookId()).thenReturn(30L);
+        when(issueCount.getIssueCount()).thenReturn(25L);
+        when(issueRecordRepository.countIssuesByBook()).thenReturn(List.of(issueCount));
 
         List<DemandPrediction> results = recommendationService.predictDemand();
 
