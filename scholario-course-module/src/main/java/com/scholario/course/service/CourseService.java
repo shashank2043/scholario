@@ -150,7 +150,7 @@ public class CourseService {
     private void validateFaculty(Long facultyId) {
         User faculty = userRepository.findById(facultyId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + facultyId));
-        if (faculty.getRole() != Role.FACULTY) {
+        if (!faculty.getRoles().contains(Role.FACULTY)) {
             throw new IllegalArgumentException("User with id " + facultyId + " is not a Faculty member");
         }
     }

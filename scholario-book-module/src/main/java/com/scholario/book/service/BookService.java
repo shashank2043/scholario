@@ -67,7 +67,7 @@ public class BookService {
         User faculty = userRepository.findById(input.facultyId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + input.facultyId()));
 
-        if (faculty.getRole() != Role.FACULTY) {
+        if (!faculty.getRoles().contains(Role.FACULTY)) {
             throw new IllegalArgumentException("User with id " + input.facultyId() + " is not a Faculty member");
         }
 

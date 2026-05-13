@@ -73,31 +73,6 @@ mutation Login($input: LoginInput!) {
 }
 ```
 
-### [1.3] Refresh Token
-**Query:**
-```graphql
-mutation RefreshToken($refreshToken: String!) {
-  refreshToken(refreshToken: $refreshToken) {
-    accessToken
-    refreshToken
-    tokenType
-  }
-}
-```
-
-### [1.4] Validate Token
-**Query:**
-```graphql
-query ValidateToken($token: String!) {
-  validateToken(token: $token) {
-    valid
-    username
-    role
-    expiresAt
-  }
-}
-```
-
 ---
 
 ## 2. User & Profile Management
@@ -105,12 +80,13 @@ query ValidateToken($token: String!) {
 ### [2.1] Get My Profile
 **Query:**
 ```graphql
-query GetUserById($id: ID!) {
-  getUserById(id: $id) {
+query GetMyProfile {
+  getMyProfile {
     id
     username
     fullName
     role
+    email
     department {
       name
       code
@@ -122,8 +98,8 @@ query GetUserById($id: ID!) {
 ### [2.2] Update My Profile
 **Query:**
 ```graphql
-mutation UpdateUserProfile($id: ID!, $input: ProfileInput!) {
-  updateUserProfile(id: $id, input: $input) {
+mutation UpdateUserProfile($input: ProfileInput!) {
+  updateUserProfile(input: $input) {
     id
     fullName
     email
@@ -186,21 +162,6 @@ mutation PublishBook($id: ID!) {
 }
 ```
 
-### [3.3] Search Books
-**Query:**
-```graphql
-query SearchBooks($title: String, $isbn: String) {
-  searchBooks(title: $title, isbn: $isbn) {
-    id
-    title
-    isbn
-    state {
-      type
-    }
-  }
-}
-```
-
 ---
 
 ## 4. Reviews & Approvals
@@ -212,18 +173,6 @@ mutation SubmitForReview($bookId: ID!, $reviewerId: ID) {
   submitBookForReview(bookId: $bookId, reviewerId: $reviewerId) {
     id
     status
-  }
-}
-```
-
-### [4.2] Approve Review
-**Query:**
-```graphql
-mutation ApproveBook($requestId: ID!, $feedback: String) {
-  approveBook(requestId: $requestId, feedback: $feedback) {
-    id
-    status
-    feedback
   }
 }
 ```
@@ -244,17 +193,6 @@ mutation CreateCourse($input: CourseInput!) {
 }
 ```
 
-### [5.2] Assign Book to Course
-**Query:**
-```graphql
-mutation AssignBookToCourse($input: CourseMaterialInput!) {
-  assignBookToCourse(input: $input) {
-    id
-    mandatory
-  }
-}
-```
-
 ---
 
 ## 6. Reservations
@@ -262,8 +200,8 @@ mutation AssignBookToCourse($input: CourseMaterialInput!) {
 ### [6.1] Reserve a Book
 **Query:**
 ```graphql
-mutation ReserveBook($input: ReservationInput!) {
-  reserveBook(input: $input) {
+mutation ReserveBook($bookId: ID!) {
+  reserveBook(bookId: $bookId) {
     id
     status
     reservedAt
@@ -271,15 +209,14 @@ mutation ReserveBook($input: ReservationInput!) {
 }
 ```
 
-### [6.2] Allocate Reserved Book
+### [6.2] Get My Reservations
 **Query:**
 ```graphql
-mutation AllocateReservedBook($bookId: ID!) {
-  allocateReservedBook(bookId: $bookId) {
+query GetMyReservations {
+  getUserReservations {
     id
-    userId
+    bookId
     status
-    expiresAt
   }
 }
 ```
@@ -288,7 +225,22 @@ mutation AllocateReservedBook($bookId: ID!) {
 
 ## 7. Lending
 
-### [7.1] Issue Book
+### [7.1] Get My Issued Books
+**Query:**
+```graphql
+query GetMyIssuedBooks {
+  getMyIssuedBooks {
+    id
+    bookId
+    dueDate
+    state {
+      type
+    }
+  }
+}
+```
+
+### [7.2] Issue Book (LIBRARIAN ONLY)
 **Query:**
 ```graphql
 mutation IssueBook($input: IssueInput!) {
@@ -302,105 +254,15 @@ mutation IssueBook($input: IssueInput!) {
 }
 ```
 
-### [7.2] Return Book
-**Query:**
-```graphql
-mutation ReturnBook($input: ReturnInput!) {
-  returnBook(input: $input) {
-    id
-    returnDate
-    penaltyAmount
-    state {
-      type
-    }
-  }
-}
-```
-
 ---
 
-## 8. Royalties
+## 8. Recommendations
 
-### [8.1] Define Royalty Policy
+### [8.1] Recommend Books
 **Query:**
 ```graphql
-mutation DefineRoyaltyPolicy($input: RoyaltyPolicyInput!) {
-  defineRoyaltyPolicy(input: $input) {
-    id
-    royaltyPercentage
-  }
-}
-```
-
-### [8.2] Calculate Payout
-**Query:**
-```graphql
-mutation CalculateRoyalty($bookId: ID!, $totalRevenue: Float!) {
-  calculateRoyalty(bookId: $bookId, totalRevenue: $totalRevenue) {
-    id
-    calculatedRoyalty
-    payoutStatus
-  }
-}
-```
-
----
-
-## 9. Violations
-
-### [9.1] Get Violation Reports
-**Query:**
-```graphql
-query GetViolationReports {
-  getViolationReports {
-    username
-    type
-    severity
-    description
-  }
-}
-```
-
----
-
-## 10. Digital Content
-
-### [10.1] Upload Digital Content
-**Query:**
-```graphql
-mutation UploadContent($input: DigitalContentInput!) {
-  uploadDigitalContent(input: $input) {
-    id
-    contentUrl
-  }
-}
-```
-
----
-
-## 11. Analytics
-
-### [11.1] Get Book Usage Analytics
-**Query:**
-```graphql
-query BookAnalytics($bookId: ID!) {
-  getBookUsageAnalytics(bookId: $bookId) {
-    totalIssues
-    totalReservations
-    digitalAccessCount
-  }
-}
-```
-
----
-
-## 12. Recommendations
-
-### [12.1] Recommend Books
-**Query:**
-```graphql
-query Recommend($userId: ID!) {
-  recommendBooks(userId: $userId) {
+query Recommend {
+  recommendBooks {
     bookId
     title
     recommendationReason
@@ -411,13 +273,13 @@ query Recommend($userId: ID!) {
 
 ---
 
-## 13. Notifications
+## 9. Notifications
 
 ### [13.1] Get My Notifications
 **Query:**
 ```graphql
-query GetNotifications($userId: ID!) {
-  getNotificationsByUser(userId: $userId) {
+query GetMyNotifications {
+  getMyNotifications {
     id
     message
     read
@@ -425,17 +287,10 @@ query GetNotifications($userId: ID!) {
 }
 ```
 
----
-
-## 14. Subscriptions (Real-Time)
-
-### [14.1] Watch Book Publications
-**Subscription:**
+### [13.2] Mark All As Read
+**Query:**
 ```graphql
-subscription OnBookPublished {
-  bookPublished {
-    message
-    relatedEntityId
-  }
+mutation MarkAllAsRead {
+  markAllNotificationsAsRead
 }
 ```

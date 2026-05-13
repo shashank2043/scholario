@@ -2,7 +2,8 @@ package com.scholario.lending.resolver;
 
 import com.scholario.lending.model.IssueRecord;
 import com.scholario.lending.service.IssueService;
-import org.springframework.graphql.data.method.annotation.Argument;
+import com.scholario.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -10,26 +11,26 @@ import org.springframework.stereotype.Controller;
 import java.util.List;
 
 @Controller
-@PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
+@RequiredArgsConstructor
 public class IssueQueryResolver {
 
     private final IssueService issueService;
+    private final UserService userService;
 
-    public IssueQueryResolver(IssueService issueService) {
-        this.issueService = issueService;
+    @QueryMapping
+    @PreAuthorize("isAuthenticated()")
+    public List<IssueRecord> getMyIssuedBooks() {
+        return issueService.getIssuedBooksByUser(userService.getCurrentUserId());
     }
 
     @QueryMapping
-    public List<IssueRecord> getIssuedBooksByUser(@Argument Long userId) {
-        return issueService.getIssuedBooksByUser(userId);
+    @PreAuthorize("isAuthenticated()")
+    public List<IssueRecord> getMyIssueHistory() {
+        return issueService.getIssueHistory(userService.getCurrentUserId());
     }
 
     @QueryMapping
-    public List<IssueRecord> getIssueHistory(@Argument Long userId) {
-        return issueService.getIssueHistory(userId);
-    }
-
-    @QueryMapping
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
     public List<IssueRecord> getDueDates() {
         return issueService.getDueDates();
     }

@@ -4,6 +4,7 @@ import com.scholario.recommendation.dto.BookRecommendation;
 import com.scholario.recommendation.dto.CourseMaterialSuggestion;
 import com.scholario.recommendation.dto.DemandPrediction;
 import com.scholario.recommendation.service.RecommendationService;
+import com.scholario.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -17,11 +18,12 @@ import java.util.List;
 public class RecommendationResolver {
 
     private final RecommendationService recommendationService;
+    private final UserService userService;
 
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
-    public List<BookRecommendation> recommendBooks(@Argument Long userId) {
-        return recommendationService.recommendBooks(userId);
+    public List<BookRecommendation> recommendBooks() {
+        return recommendationService.recommendBooks(userService.getCurrentUserId());
     }
 
     @QueryMapping

@@ -9,7 +9,11 @@ import com.scholario.user.model.User;
 import com.scholario.user.repository.DepartmentRepository;
 import com.scholario.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +22,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +31,37 @@ public class UserService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
-    private final Set<String> syncedUsers = ConcurrentHashMap.newKeySet();
+
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("User not authenticated");
+        }
+
+        String username;
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserDetails userDetails) {
+            username = userDetails.getUsername();
+        } else if (principal instanceof Jwt jwt) {
+            username = jwt.getClaimAsString("preferred_username");
+        } else if (principal instanceof String s) {
+            username = s;
+        } else {
+            username = authentication.getName();
+        }
+
+        if (username == null) {
+            throw new IllegalStateException("Could not extract username from security context");
+        }
+
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND + ": " + username));
+    }
+
+    public Long getCurrentUserId() {
+        return getCurrentUser().getId();
+    }
 
     @Transactional
     public User registerUser(UserInput input) {
@@ -36,7 +69,7 @@ public class UserService {
         user.setUsername(input.username());
         user.setEmail(input.email());
         user.setFullName(input.fullName());
-        user.setRole(input.role());
+        user.setRoles(input.roles());
         user.setPassword(passwordEncoder.encode(input.password()));
         return userRepository.save(user);
     }
@@ -58,7 +91,15 @@ public class UserService {
     public User assignRole(Long userId, Role role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
-        user.setRole(role);
+        user.getRoles().add(role);
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public User removeRole(Long userId, Role role) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+        user.getRoles().remove(role);
         return userRepository.save(user);
     }
 
@@ -66,7 +107,7 @@ public class UserService {
     public User linkFacultyToDepartment(Long facultyId, Long departmentId) {
         User user = userRepository.findById(facultyId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
-        if (user.getRole() != Role.FACULTY) {
+        if (!user.getRoles().contains(Role.FACULTY)) {
             throw new IllegalStateException("Only faculty can be linked to a department");
         }
         Department department = departmentRepository.findById(departmentId)
@@ -81,11 +122,11 @@ public class UserService {
     }
 
     public List<User> getFacultyList() {
-        return userRepository.findByRole(Role.FACULTY);
+        return userRepository.findByRoles(Role.FACULTY);
     }
 
     public List<User> getStudentList() {
-        return userRepository.findByRole(Role.STUDENT);
+        return userRepository.findByRoles(Role.STUDENT);
     }
 
     public List<Department> getDepartments() {
@@ -102,29 +143,46 @@ public class UserService {
 
     @Transactional
     public void syncUserFromExternalProvider(String username, String email, String fullName, List<String> roles) {
-        if (syncedUsers.contains(username)) {
-            return;
-        }
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        Set<Role> externalRoles = resolveExternalRoles(roles);
 
-        if (userRepository.findByUsername(username).isEmpty()) {
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            boolean changed = false;
+
+            if (!user.getRoles().equals(externalRoles)) {
+                user.setRoles(externalRoles);
+                changed = true;
+            }
+            if (email != null && !email.equals(user.getEmail())) {
+                user.setEmail(email);
+                changed = true;
+            }
+            if (fullName != null && !fullName.equals(user.getFullName())) {
+                user.setFullName(fullName);
+                changed = true;
+            }
+
+            if (changed) {
+                userRepository.save(user);
+            }
+        } else {
             User user = new User();
             user.setUsername(username);
             user.setEmail(email != null ? email : username + "@scholario.local");
             user.setFullName(fullName != null ? fullName : username);
             user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-
-            user.setRole(resolveExternalRole(roles));
+            user.setRoles(externalRoles);
             userRepository.save(user);
         }
-        syncedUsers.add(username);
     }
 
-    private Role resolveExternalRole(List<String> roles) {
-        if (roles == null) {
-            return Role.STUDENT;
+    private Set<Role> resolveExternalRoles(List<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return Set.of(Role.STUDENT);
         }
 
-        Optional<Role> firstAllowedRole = roles.stream()
+        Set<Role> resolvedRoles = roles.stream()
                 .map(role -> role == null ? "" : role.trim().toUpperCase(Locale.ROOT))
                 .filter(role -> !role.isBlank())
                 .flatMap(role -> {
@@ -134,8 +192,8 @@ public class UserService {
                         return java.util.stream.Stream.empty();
                     }
                 })
-                .findFirst();
+                .collect(java.util.stream.Collectors.toSet());
 
-        return firstAllowedRole.orElse(Role.STUDENT);
+        return resolvedRoles.isEmpty() ? Set.of(Role.STUDENT) : resolvedRoles;
     }
 }

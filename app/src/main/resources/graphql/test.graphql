@@ -1,0 +1,14 @@
+
+query GetBookById {
+    getBookById(id: "3") {
+        id
+        title
+        isbn
+        facultyId
+        description
+        versionNumber
+        parentBookId
+        createdAt
+        updatedAt
+    }
+}

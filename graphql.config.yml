@@ -1,0 +1,21 @@
+schema:
+  - "app/src/main/resources/graphql/schema.graphqls"
+  - "scholario-analytics-module/src/main/resources/graphql/analytics.graphqls"
+  - "scholario-auth-module/src/main/resources/graphql/auth.graphqls"
+  - "scholario-content-module/src/main/resources/graphql/content.graphqls"
+  - "scholario-lending-module/src/main/resources/graphql/lending.graphqls"
+  - "scholario-recommendation-module/src/main/resources/graphql/recommendation.graphqls"
+  - "scholario-royalty-module/src/main/resources/graphql/royalty.graphqls"
+  - "scholario-user-module/src/main/resources/graphql/user.graphqls"
+  - "scholario-violation-module/src/main/resources/graphql/violation.graphqls"
+
+documents:
+  - "**/*.graphql"
+  - "scholario-graphiql-operations.md"
+
+extensions:
+  endpoints:
+    Default:
+      url: "http://localhost:8090/graphql"
+      headers:
+        Authorization: "Bearer ${token}"
