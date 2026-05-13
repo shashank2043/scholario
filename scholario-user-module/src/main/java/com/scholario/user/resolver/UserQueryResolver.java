@@ -40,6 +40,12 @@ public class UserQueryResolver {
     }
 
     @QueryMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public List<User> getUnassignedUsers() {
+        return userService.getUnassignedUsers();
+    }
+
+    @QueryMapping
     public List<Department> getDepartments() {
         return userService.getDepartments();
     }

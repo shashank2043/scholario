@@ -69,7 +69,7 @@ public class UserService {
         user.setUsername(input.username());
         user.setEmail(input.email());
         user.setFullName(input.fullName());
-        user.setRoles(input.roles());
+        user.setRoles(Set.of(Role.UNASSIGNED));
         user.setPassword(passwordEncoder.encode(input.password()));
         return userRepository.save(user);
     }
@@ -91,6 +91,7 @@ public class UserService {
     public User assignRole(Long userId, Role role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+        user.getRoles().remove(Role.UNASSIGNED);
         user.getRoles().add(role);
         return userRepository.save(user);
     }
@@ -119,6 +120,10 @@ public class UserService {
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+    }
+
+    public List<User> getUnassignedUsers() {
+        return userRepository.findByRoles(Role.UNASSIGNED);
     }
 
     public List<User> getFacultyList() {
@@ -179,7 +184,7 @@ public class UserService {
 
     private Set<Role> resolveExternalRoles(List<String> roles) {
         if (roles == null || roles.isEmpty()) {
-            return Set.of(Role.STUDENT);
+            return Set.of(Role.UNASSIGNED);
         }
 
         Set<Role> resolvedRoles = roles.stream()
@@ -194,6 +199,6 @@ public class UserService {
                 })
                 .collect(java.util.stream.Collectors.toSet());
 
-        return resolvedRoles.isEmpty() ? Set.of(Role.STUDENT) : resolvedRoles;
+        return resolvedRoles.isEmpty() ? Set.of(Role.UNASSIGNED) : resolvedRoles;
     }
 }

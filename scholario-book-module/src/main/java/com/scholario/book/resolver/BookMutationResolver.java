@@ -20,7 +20,7 @@ public class BookMutationResolver {
     }
 
     @MutationMapping
-    @PreAuthorize("hasAnyRole('FACULTY', 'ADMIN')")
+    @PreAuthorize("hasRole('FACULTY')")
     public Book createBook(@Valid @Argument BookInput input) {
         return bookService.createBook(input);
     }

@@ -9,7 +9,9 @@ type Query {
     getMyProfile: User
     getFacultyList: [User]
     getStudentList: [User]
+    getUnassignedUsers: [User]
     getDepartments: [Department]
+    getAllBooks: [Book]
 
     # Reservation Queries
     getReservationQueue(bookId: ID!): [Reservation]
@@ -127,13 +129,13 @@ enum Role {
     FACULTY
     STUDENT
     LIBRARIAN
+    UNASSIGNED
 }
 
 input UserInput {
     username: String!
     email: String!
     fullName: String!
-    roles: [Role!]!
     password: String!
 }
 
@@ -178,7 +180,6 @@ type Archived implements BookState {
 input BookInput {
     title: String!
     isbn: String!
-    facultyId: ID!
     description: String
 }
 

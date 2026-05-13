@@ -10,9 +10,6 @@ public record BookInput(
         @NotBlank(message = "ISBN is required")
         String isbn,
 
-        @NotNull(message = "Faculty ID is required")
-        Long facultyId,
-
         String description
 ) {
 }

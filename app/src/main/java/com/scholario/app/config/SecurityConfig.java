@@ -3,6 +3,7 @@ package com.scholario.app.config;
 import com.scholario.auth.security.JwtAuthenticationFilter;
 import com.scholario.auth.security.KeycloakJwtAuthenticationConverter;
 import com.scholario.auth.security.KeycloakUserSyncFilter;
+import com.scholario.auth.security.UnassignedRoleFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import org.springframework.security.oauth2.server.resource.web.BearerTokenResolv
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -35,6 +37,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final KeycloakUserSyncFilter keycloakUserSyncFilter;
+    private final UnassignedRoleFilter unassignedRoleFilter;
     
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
@@ -122,7 +125,8 @@ public class SecurityConfig {
         }
 
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(unassignedRoleFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

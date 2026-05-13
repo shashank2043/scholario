@@ -2,6 +2,7 @@ package com.scholario.lending.resolver;
 
 import com.scholario.lending.model.IssueRecord;
 import com.scholario.lending.service.IssueService;
+import com.scholario.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,17 +21,22 @@ class IssueQueryResolverTest {
     @Mock
     private IssueService issueService;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private IssueQueryResolver issueQueryResolver;
 
     @Test
-    void getIssuedBooksByUser_Success() {
+    void getMyIssuedBooks_Success() {
         List<IssueRecord> issues = List.of(new IssueRecord());
+        when(userService.getCurrentUserId()).thenReturn(1L);
         when(issueService.getIssuedBooksByUser(1L)).thenReturn(issues);
 
-        List<IssueRecord> result = issueQueryResolver.getIssuedBooksByUser(1L);
+        List<IssueRecord> result = issueQueryResolver.getMyIssuedBooks();
 
         assertEquals(issues, result);
+        verify(userService).getCurrentUserId();
         verify(issueService).getIssuedBooksByUser(1L);
     }
 }

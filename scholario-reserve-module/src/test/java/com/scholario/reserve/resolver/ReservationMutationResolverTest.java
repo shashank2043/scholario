@@ -1,10 +1,10 @@
 package com.scholario.reserve.resolver;
 
-import com.scholario.reserve.dto.ReservationInput;
 import com.scholario.reserve.dto.ReservationResponse;
 import com.scholario.reserve.model.Reservation;
 import com.scholario.reserve.model.Pending;
 import com.scholario.reserve.service.ReservationService;
+import com.scholario.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +20,9 @@ class ReservationMutationResolverTest {
 
     @Mock
     private ReservationService reservationService;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private ReservationMutationResolver reservationMutationResolver;
@@ -37,16 +40,18 @@ class ReservationMutationResolverTest {
 
     @Test
     void testReserveBook() {
-        ReservationInput input = new ReservationInput(10L, 20L);
-        when(reservationService.reserveBook(input.bookId(), input.userId())).thenReturn(reservation);
+        Long bookId = 10L;
+        Long userId = 20L;
+        when(userService.getCurrentUserId()).thenReturn(userId);
+        when(reservationService.reserveBook(bookId, userId)).thenReturn(reservation);
 
-        ReservationResponse response = reservationMutationResolver.reserveBook(input);
+        ReservationResponse response = reservationMutationResolver.reserveBook(bookId);
 
         assertNotNull(response);
         assertEquals(1L, response.id());
         assertEquals(10L, response.bookId());
         assertEquals(20L, response.userId());
-        verify(reservationService, times(1)).reserveBook(input.bookId(), input.userId());
+        verify(reservationService, times(1)).reserveBook(bookId, userId);
     }
 
     @Test

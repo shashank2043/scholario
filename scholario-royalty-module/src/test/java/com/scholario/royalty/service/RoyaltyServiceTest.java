@@ -49,7 +49,7 @@ class RoyaltyServiceTest {
     void setUp() {
         User faculty = new User();
         faculty.setId(2L);
-        faculty.setRole(Role.FACULTY);
+        faculty.setRoles(java.util.Set.of(Role.FACULTY));
         lenient().when(bookRepository.existsById(anyLong())).thenReturn(true);
         lenient().when(userRepository.findById(2L)).thenReturn(Optional.of(faculty));
 

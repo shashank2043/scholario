@@ -39,4 +39,9 @@ public class BookQueryResolver {
     public List<Book> getBookVersions(@Argument Long bookId) {
         return bookService.getBookVersions(bookId);
     }
+
+    @QueryMapping
+    public List<Book> getAllBooks() {
+        return bookService.getAllBooks();
+    }
 }

@@ -4,6 +4,7 @@ import com.scholario.recommendation.dto.BookRecommendation;
 import com.scholario.recommendation.dto.CourseMaterialSuggestion;
 import com.scholario.recommendation.dto.DemandPrediction;
 import com.scholario.recommendation.service.RecommendationService;
+import com.scholario.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,15 +23,19 @@ class RecommendationResolverTest {
     @Mock
     private RecommendationService recommendationService;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private RecommendationResolver recommendationResolver;
 
     @Test
     void recommendBooks_ShouldDelegateToService() {
         List<BookRecommendation> response = List.of(new BookRecommendation(1L, "Title", "Reason", 0.9));
+        when(userService.getCurrentUserId()).thenReturn(1L);
         when(recommendationService.recommendBooks(1L)).thenReturn(response);
 
-        List<BookRecommendation> result = recommendationResolver.recommendBooks(1L);
+        List<BookRecommendation> result = recommendationResolver.recommendBooks();
 
         assertEquals(response, result);
         verify(recommendationService).recommendBooks(1L);

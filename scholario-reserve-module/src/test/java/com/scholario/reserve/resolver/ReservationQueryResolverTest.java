@@ -4,6 +4,7 @@ import com.scholario.reserve.dto.ReservationResponse;
 import com.scholario.reserve.model.Reservation;
 import com.scholario.reserve.model.Pending;
 import com.scholario.reserve.service.ReservationService;
+import com.scholario.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,9 @@ class ReservationQueryResolverTest {
 
     @Mock
     private ReservationService reservationService;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private ReservationQueryResolver reservationQueryResolver;
@@ -64,9 +68,10 @@ class ReservationQueryResolverTest {
     @Test
     void testGetUserReservations() {
         Long userId = 20L;
+        when(userService.getCurrentUserId()).thenReturn(userId);
         when(reservationService.getUserReservations(userId)).thenReturn(Arrays.asList(reservation1));
 
-        List<ReservationResponse> responses = reservationQueryResolver.getUserReservations(userId);
+        List<ReservationResponse> responses = reservationQueryResolver.getUserReservations();
 
         assertNotNull(responses);
         assertEquals(1, responses.size());

@@ -24,7 +24,7 @@ class JwtServiceTest {
         testUser = new User();
         testUser.setUsername("testuser");
         testUser.setEmail("test@example.com");
-        testUser.setRole(Role.STUDENT);
+        testUser.setRoles(java.util.Set.of(Role.STUDENT));
     }
 
     @Test
@@ -34,7 +34,7 @@ class JwtServiceTest {
 
         DecodedJWT decodedJWT = jwtService.validateToken(token);
         assertEquals("testuser", decodedJWT.getSubject());
-        assertEquals("STUDENT", decodedJWT.getClaim("role").asString());
+        assertEquals("STUDENT", decodedJWT.getClaim("roles").asArray(String.class)[0]);
     }
 
     @Test

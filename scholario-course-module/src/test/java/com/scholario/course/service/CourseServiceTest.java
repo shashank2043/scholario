@@ -58,7 +58,7 @@ class CourseServiceTest {
 
         User faculty = new User();
         faculty.setId(1L);
-        faculty.setRole(Role.FACULTY);
+        faculty.setRoles(java.util.Set.of(Role.FACULTY));
         lenient().when(userRepository.findById(1L)).thenReturn(Optional.of(faculty));
     }
 
