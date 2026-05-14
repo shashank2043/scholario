@@ -12,7 +12,7 @@ import org.springframework.stereotype.Controller;
 import java.util.List;
 
 @Controller
-@PreAuthorize("isAuthenticated()")
+@PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
 public class ReviewQueryResolver {
 
     private final ReviewService reviewService;

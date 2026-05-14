@@ -21,7 +21,7 @@ public class RecommendationResolver {
     private final UserService userService;
 
     @QueryMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
     public List<BookRecommendation> recommendBooks() {
         return recommendationService.recommendBooks(userService.getCurrentUserId());
     }

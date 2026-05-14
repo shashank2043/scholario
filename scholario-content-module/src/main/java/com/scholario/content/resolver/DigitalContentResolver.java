@@ -16,6 +16,7 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
 public class DigitalContentResolver {
 
     private final DigitalContentService digitalContentService;

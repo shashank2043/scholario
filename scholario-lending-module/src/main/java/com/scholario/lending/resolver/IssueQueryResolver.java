@@ -18,13 +18,13 @@ public class IssueQueryResolver {
     private final UserService userService;
 
     @QueryMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
     public List<IssueRecord> getMyIssuedBooks() {
         return issueService.getIssuedBooksByUser(userService.getCurrentUserId());
     }
 
     @QueryMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
     public List<IssueRecord> getMyIssueHistory() {
         return issueService.getIssueHistory(userService.getCurrentUserId());
     }

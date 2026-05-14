@@ -46,7 +46,8 @@ public class GlobalGraphQlExceptionHandler {
 
     @GraphQlExceptionHandler
     public GraphQLError handleAccessDeniedException(AccessDeniedException ex, DataFetchingEnvironment env) {
-        String username = getUsername(env);
+        Authentication auth = getAuthentication(env);
+        String username = auth != null ? auth.getName() : ANONYMOUS_USER;
         String path = env.getExecutionStepInfo().getPath().toString();
         String operation = env.getOperationDefinition().getOperation().name();
         
@@ -59,9 +60,35 @@ public class GlobalGraphQlExceptionHandler {
             "unknown"
         ));
 
+        String message = ex.getMessage();
+        String code = "FORBIDDEN";
+
+        if (auth != null && auth.isAuthenticated()) {
+            java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> authorities = auth.getAuthorities();
+            
+            boolean hasUnassigned = authorities.stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                    .anyMatch(a -> a.equalsIgnoreCase("ROLE_UNASSIGNED") || a.equalsIgnoreCase("UNASSIGNED"));
+            
+            boolean hasOtherRoles = authorities.stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                    .anyMatch(a -> !a.equalsIgnoreCase("ROLE_UNASSIGNED") && 
+                                  !a.equalsIgnoreCase("UNASSIGNED") &&
+                                  !a.equalsIgnoreCase("ROLE_ANONYMOUS") &&
+                                  !a.equalsIgnoreCase("ANONYMOUS") &&
+                                  !a.toUpperCase().startsWith("SCOPE_") &&
+                                  !a.toUpperCase().startsWith("OIDC_"));
+
+            if (hasUnassigned && !hasOtherRoles) {
+                message = "Access denied: Your account is pending role assignment by an administrator.";
+                code = "UNASSIGNED_ACCESS_DENIED";
+            }
+        }
+
         return GraphqlErrorBuilder.newError(env)
-                .message(ex.getMessage())
+                .message(message)
                 .errorType(ErrorType.FORBIDDEN)
+                .extensions(java.util.Map.of("code", code))
                 .build();
     }
 
@@ -107,6 +134,18 @@ public class GlobalGraphQlExceptionHandler {
     }
 
     private String getUsername(DataFetchingEnvironment env) {
+        Authentication auth = getAuthentication(env);
+        if (auth != null && auth.isAuthenticated() && !auth.getName().equals(ANONYMOUS_USER)) {
+            Object principal = auth.getPrincipal();
+            if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+                return userDetails.getUsername();
+            }
+            return auth.getName();
+        }
+        return ANONYMOUS_USER;
+    }
+
+    private Authentication getAuthentication(DataFetchingEnvironment env) {
         // Priority 1: Check SecurityContext from GraphQL Context (Bridge from Interceptor)
         Authentication auth = env.getGraphQlContext().get("auth");
         
@@ -124,14 +163,6 @@ public class GlobalGraphQlExceptionHandler {
             auth = SecurityContextHolder.getContext().getAuthentication();
         }
 
-        if (auth != null && auth.isAuthenticated() && !auth.getName().equals(ANONYMOUS_USER)) {
-            Object principal = auth.getPrincipal();
-            if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
-                return userDetails.getUsername();
-            }
-            return auth.getName();
-        }
-        
-        return ANONYMOUS_USER;
+        return auth;
     }
 }
