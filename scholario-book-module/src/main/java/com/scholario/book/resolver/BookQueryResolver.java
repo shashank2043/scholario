@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Controller
-@PreAuthorize("isAuthenticated()")
+@PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
 public class BookQueryResolver {
 
     private final BookService bookService;

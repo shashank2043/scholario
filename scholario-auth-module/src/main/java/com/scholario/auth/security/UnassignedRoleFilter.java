@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,15 +22,17 @@ import java.util.List;
 @Component
 public class UnassignedRoleFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(UnassignedRoleFilter.class);
+
     private final List<String> publicPaths = List.of(
-            "/graphql",
             "/h2-console",
             "/graphiql",
             "/favicon.ico",
             "/assets/",
             "/favicon.svg",
             "/graphiql-local",
-            "/monacoeditorwork"
+            "/monacoeditorwork",
+            "/graphql"
     );
 
     @Override
@@ -46,6 +50,7 @@ public class UnassignedRoleFilter extends OncePerRequestFilter {
                     .anyMatch(a -> !a.getAuthority().equals("ROLE_UNASSIGNED"));
 
             if (hasUnassigned && !hasOtherRoles) {
+                log.warn("Blocking access to {} for user with only UNASSIGNED role", request.getRequestURI());
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"errors\":[{\"message\":\"Access denied: Your account is pending role assignment by an administrator.\",\"extensions\":{\"code\":\"UNASSIGNED_ACCESS_DENIED\"}}]}");

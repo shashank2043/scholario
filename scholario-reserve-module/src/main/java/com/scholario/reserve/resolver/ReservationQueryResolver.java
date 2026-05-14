@@ -27,7 +27,7 @@ public class ReservationQueryResolver {
     }
 
     @QueryMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
     public List<ReservationResponse> getUserReservations() {
         return reservationService.getUserReservations(userService.getCurrentUserId()).stream()
                 .map(ReservationResponse::fromEntity)

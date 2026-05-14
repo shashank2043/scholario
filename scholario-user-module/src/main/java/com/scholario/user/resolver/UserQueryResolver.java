@@ -19,6 +19,7 @@ public class UserQueryResolver {
     private final UserService userService;
 
     @QueryMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
     public User getUserById(@Argument Long id) {
         return userService.getUserById(id);
     }
@@ -30,11 +31,13 @@ public class UserQueryResolver {
     }
 
     @QueryMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
     public List<User> getFacultyList() {
         return userService.getFacultyList();
     }
 
     @QueryMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'LIBRARIAN')")
     public List<User> getStudentList() {
         return userService.getStudentList();
     }

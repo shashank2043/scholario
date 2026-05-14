@@ -102,10 +102,9 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                        "/graphql",
                         "/h2-console/**",
                         "/graphiql/**",
-                        "/favicon.ico:1",
+                        "/favicon.ico",
                         "/assets/**",
                         "/favicon.svg",
                         "/graphiql-local/**",
@@ -126,7 +125,7 @@ public class SecurityConfig {
 
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterAfter(unassignedRoleFilter, JwtAuthenticationFilter.class);
+            .addFilterBefore(unassignedRoleFilter, AuthorizationFilter.class);
 
         return http.build();
     }
