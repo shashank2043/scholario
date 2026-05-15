@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
-import { useMutation } from '@apollo/client/react';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { 
   BookOpen, 
   AlertCircle, 
@@ -192,15 +192,15 @@ export const LibrarianDashboard = () => {
     }
   };
 
-  const studentOptions = studentsData?.getStudentList.map(s => ({ id: s.id, name: s.fullName })) || [];
-  const bookOptions = booksData?.getAllBooks.map(b => ({ id: b.id, name: b.title })) || [];
+  const studentOptions = studentsData?.getStudentList.map((s: User) => ({ id: s.id, name: s.fullName })) || [];
+  const bookOptions = booksData?.getAllBooks.map((b: Book) => ({ id: b.id, name: b.title })) || [];
   
   const activeIssuesForStudent = data?.getDueDates.filter(
-    issue => issue.userId === selectedStudent && issue.state.type !== 'RETURNED'
+    (issue: IssueResponse) => issue.userId === selectedStudent && issue.state.type !== 'RETURNED'
   ) || [];
 
-  const issueOptions = activeIssuesForStudent.map(issue => {
-    const book = booksData?.getAllBooks.find(b => b.id === issue.bookId);
+  const issueOptions = activeIssuesForStudent.map((issue: IssueResponse) => {
+    const book = booksData?.getAllBooks.find((b: Book) => b.id === issue.bookId);
     return {
       id: issue.id,
       name: book ? `${book.title} (Due: ${new Date(issue.dueDate).toLocaleDateString()})` : `Issue #${issue.id.substring(0, 8)}`
@@ -327,7 +327,7 @@ export const LibrarianDashboard = () => {
                     </td>
                   </tr>
                 ) : (
-                  data?.getDueDates.map((issue) => (
+                  data?.getDueDates.map((issue: IssueResponse) => (
                     <tr key={issue.id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="font-semibold text-gray-900">Book #{issue.bookId}</div>
