@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import { 
@@ -13,6 +13,8 @@ import {
   BookPlus,
   History
 } from 'lucide-react';
+import { Modal } from '../../components/Modal';
+import { CustomSelect } from '../../components/CustomSelect';
 
 const ISSUE_BOOK = gql`
   mutation IssueBook($bookId: ID!, $userId: ID!) {
@@ -50,6 +52,24 @@ const GET_DUE_DATES = gql`
   }
 `;
 
+const GET_STUDENTS = gql`
+  query GetStudents {
+    getStudentList {
+      id
+      fullName
+    }
+  }
+`;
+
+const GET_BOOKS = gql`
+  query GetBooks {
+    getAllBooks {
+      id
+      title
+    }
+  }
+`;
+
 interface IssueResponse {
   id: string;
   bookId: string;
@@ -60,6 +80,16 @@ interface IssueResponse {
   state: {
     type: string;
   };
+}
+
+interface User {
+  id: string;
+  fullName: string;
+}
+
+interface Book {
+  id: string;
+  title: string;
 }
 
 interface StatCardProps {
@@ -119,29 +149,63 @@ const ActionCard = ({ title, description, icon: Icon, color, delay, onClick }: A
 };
 
 export const LibrarianDashboard = () => {
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState('');
+  const [selectedBook, setSelectedBook] = useState('');
+  const [selectedIssueId, setSelectedIssueId] = useState('');
+
   const [issueMutation] = useMutation(ISSUE_BOOK);
   const [returnMutation] = useMutation(RETURN_BOOK);
-  const { loading, error, data } = useQuery<{ getDueDates: IssueResponse[] }>(GET_DUE_DATES);
+  
+  const { loading, error, data, refetch } = useQuery<{ getDueDates: IssueResponse[] }>(GET_DUE_DATES);
+  const { data: studentsData } = useQuery<{ getStudentList: User[] }>(GET_STUDENTS);
+  const { data: booksData } = useQuery<{ getAllBooks: Book[] }>(GET_BOOKS);
 
-  // Note: These handlers will be used by modals in a later task
-  // Keeping them here as placeholders for now to satisfy mutation logic requirement
-  const _handleIssue = async (bookId: string, userId: string) => {
+  const handleIssue = async () => {
+    if (!selectedBook || !selectedStudent) return;
     try {
-      await issueMutation({ variables: { bookId, userId } });
-      alert('Book issued successfully!');
-    } catch (_err) {
-      alert('Failed to issue book');
+      await issueMutation({ 
+        variables: { bookId: selectedBook, userId: selectedStudent } 
+      });
+      setIsIssueModalOpen(false);
+      setSelectedBook('');
+      setSelectedStudent('');
+      refetch();
+    } catch (err) {
+      console.error('Failed to issue book:', err);
     }
   };
 
-  const _handleReturn = async (issueId: string, userId: string) => {
+  const handleReturn = async () => {
+    if (!selectedIssueId || !selectedStudent) return;
     try {
-      await returnMutation({ variables: { issueId, userId } });
-      alert('Book returned successfully!');
-    } catch (_err) {
-      alert('Failed to return book');
+      await returnMutation({ 
+        variables: { issueId: selectedIssueId, userId: selectedStudent } 
+      });
+      setIsReturnModalOpen(false);
+      setSelectedIssueId('');
+      setSelectedStudent('');
+      refetch();
+    } catch (err) {
+      console.error('Failed to return book:', err);
     }
   };
+
+  const studentOptions = studentsData?.getStudentList.map(s => ({ id: s.id, name: s.fullName })) || [];
+  const bookOptions = booksData?.getAllBooks.map(b => ({ id: b.id, name: b.title })) || [];
+  
+  const activeIssuesForStudent = data?.getDueDates.filter(
+    issue => issue.userId === selectedStudent && issue.state.type !== 'RETURNED'
+  ) || [];
+
+  const issueOptions = activeIssuesForStudent.map(issue => {
+    const book = booksData?.getAllBooks.find(b => b.id === issue.bookId);
+    return {
+      id: issue.id,
+      name: book ? `${book.title} (Due: ${new Date(issue.dueDate).toLocaleDateString()})` : `Issue #${issue.id.substring(0, 8)}`
+    };
+  });
 
   return (
     <div className="space-y-10 max-w-7xl mx-auto">
@@ -195,7 +259,7 @@ export const LibrarianDashboard = () => {
               icon={BookPlus} 
               color="indigo" 
               delay="500ms"
-              onClick={() => {}} // Modal will be added later
+              onClick={() => setIsIssueModalOpen(true)}
             />
             <ActionCard 
               title="Confirm Return" 
@@ -203,7 +267,7 @@ export const LibrarianDashboard = () => {
               icon={RefreshCcw} 
               color="emerald" 
               delay="600ms"
-              onClick={() => {}} // Modal will be added later
+              onClick={() => setIsReturnModalOpen(true)}
             />
           </div>
           
@@ -292,6 +356,73 @@ export const LibrarianDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Issue Book Modal */}
+      <Modal
+        isOpen={isIssueModalOpen}
+        onClose={() => setIsIssueModalOpen(false)}
+        title="Issue New Book"
+        subtitle="Create a new lending record for a student"
+      >
+        <div className="space-y-6">
+          <CustomSelect 
+            label="Select Student"
+            options={studentOptions}
+            value={selectedStudent}
+            onChange={setSelectedStudent}
+            placeholder="Search for a student..."
+          />
+          <CustomSelect 
+            label="Select Book"
+            options={bookOptions}
+            value={selectedBook}
+            onChange={setSelectedBook}
+            placeholder="Search for a book..."
+          />
+          <button 
+            onClick={handleIssue}
+            disabled={!selectedStudent || !selectedBook}
+            className="btn-tactile w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none transition-all mt-4"
+          >
+            Issue Book
+          </button>
+        </div>
+      </Modal>
+
+      {/* Confirm Return Modal */}
+      <Modal
+        isOpen={isReturnModalOpen}
+        onClose={() => setIsReturnModalOpen(false)}
+        title="Confirm Return"
+        subtitle="Process a book return and clear the active issue"
+      >
+        <div className="space-y-6">
+          <CustomSelect 
+            label="Select Student"
+            options={studentOptions}
+            value={selectedStudent}
+            onChange={(val) => {
+              setSelectedStudent(val);
+              setSelectedIssueId('');
+            }}
+            placeholder="Search for a student..."
+          />
+          <CustomSelect 
+            label="Active Issue"
+            options={issueOptions}
+            value={selectedIssueId}
+            onChange={setSelectedIssueId}
+            placeholder={selectedStudent ? "Select an active loan..." : "Select a student first"}
+          />
+          <button 
+            onClick={handleReturn}
+            disabled={!selectedStudent || !selectedIssueId}
+            className="btn-tactile w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-200 hover:bg-emerald-700 disabled:opacity-50 disabled:shadow-none transition-all mt-4"
+          >
+            Confirm Return
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };
