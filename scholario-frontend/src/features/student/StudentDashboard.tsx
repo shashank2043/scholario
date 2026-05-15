@@ -113,49 +113,60 @@ export const StudentDashboard = () => {
                   <AlertCircle size={40} className="text-rose-500 mx-auto mb-4" />
                   <p className="text-rose-500 font-bold">Error loading library data</p>
                 </div>
-              ) : data?.getMyIssuedBooks.length === 0 ? (
-                <div className="p-12 text-center">
-                  <Book size={40} className="text-gray-200 mx-auto mb-4" />
-                  <p className="text-gray-500 font-medium">No books currently issued.</p>
-                </div>
-              ) : data?.getMyIssuedBooks.map((issue: any) => (
-                <div key={issue.id} className="p-8 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
-                  <div className="flex items-center space-x-6">
-                    <div className="w-16 h-16 bg-gray-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
-                      <Book size={28} />
+              ) : data?.getMyIssuedBooks.map((issue: any, index: number) => {
+                const dueDate = new Date(issue.dueDate);
+                const now = new Date();
+                const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                
+                const isOverdue = issue.state.type === 'OVERDUE';
+                const isDueSoon = diffDays <= 3 && diffDays >= 0;
+
+                return (
+                  <div 
+                    key={issue.id} 
+                    className="p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:bg-slate-50/50 transition-all group animate-slide-up opacity-0"
+                    style={{ animationDelay: `${600 + index * 100}ms` }}
+                  >
+                    <div className="flex items-center space-x-6">
+                      <div className="w-16 h-16 bg-white border border-slate-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                        <Book size={28} />
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-gray-900">Book Registry ID: {issue.bookId}</p>
+                        <p className="text-gray-400 text-xs font-black uppercase tracking-widest mt-1">Transaction Ref: {issue.id.substring(0, 8)}</p>
+                        <div className="flex flex-wrap items-center gap-3 mt-3">
+                          <span className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                            isOverdue ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                            isDueSoon ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                            'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                          }`}>
+                            <Clock size={12} />
+                            {isOverdue ? 'Overdue' : isDueSoon ? `Due in ${diffDays} days` : 'Secure'}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-bold">Due on {dueDate.toLocaleDateString()}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-lg font-bold text-gray-900">Book ID: {issue.bookId}</p>
-                      <p className="text-gray-500 font-medium flex items-center mt-1">
-                        <Clock size={16} className="mr-2 text-indigo-400" /> Due on {new Date(issue.dueDate).toLocaleDateString()}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <button className="btn-tactile px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200">Renew</button>
+                      <button className="btn-tactile px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 shadow-md shadow-indigo-100">Details</button>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`px-4 py-1.5 text-xs font-black rounded-full uppercase tracking-widest ${
-                      issue.state.type === 'OVERDUE' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
-                    }`}>{issue.state.type}</span>
-                    {issue.penaltyAmount > 0 && (
-                      <p className="text-rose-600 font-black mt-2 flex items-center justify-end">
-                        <AlertCircle size={14} className="mr-1" /> ${issue.penaltyAmount}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 rounded-[2rem] shadow-xl text-white">
+          <div className="bg-indigo-600 p-8 rounded-[2rem] shadow-xl shadow-indigo-100 text-white animate-slide-up opacity-0" style={{ animationDelay: '700ms' }}>
             <h4 className="text-xl font-bold mb-6">Quick Discovery</h4>
             <div className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300" size={20} />
                 <input 
                   type="text" 
-                  placeholder="Find your next read..." 
+                  placeholder="Find a book..." 
                   className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 outline-none placeholder:text-indigo-200 text-white font-medium"
                 />
               </div>
@@ -163,6 +174,18 @@ export const StudentDashboard = () => {
                 Search Library
               </button>
             </div>
+          </div>
+
+          <div className="card-tactile group p-8 bg-white border-2 border-gray-50 rounded-[2rem] shadow-sm hover:border-emerald-200 transition-all cursor-pointer animate-slide-up opacity-0" style={{ animationDelay: '800ms' }}>
+             <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all mb-4">
+                <AlertCircle size={24} />
+             </div>
+             <h4 className="font-bold text-slate-800 text-lg uppercase tracking-tight">Payments & Fines</h4>
+             <p className="text-slate-400 text-sm mt-1">Clear pending dues and view transaction history.</p>
+             <div className="mt-6 pt-6 border-t border-slate-50 flex items-center justify-between">
+                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Active Balance</span>
+                <span className="text-xl font-black text-slate-900">${totalFines.toFixed(2)}</span>
+             </div>
           </div>
         </div>
       </div>
