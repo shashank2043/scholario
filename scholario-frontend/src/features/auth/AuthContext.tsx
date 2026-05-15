@@ -20,6 +20,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+let isKeycloakInitializing = false;
+let keycloakInitialized = false;
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authenticated, setAuthenticated] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -29,36 +32,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    keycloak
-      .init({ onLoad: 'login-required', checkLoginIframe: false })
-      .then((auth) => {
+    if (keycloakInitialized) {
+      setLoading(false);
+      return;
+    }
+    
+    if (isKeycloakInitializing) return;
+    isKeycloakInitializing = true;
+
+    const initializeKeycloak = async () => {
+      try {
+        console.log('[Auth] Initializing Keycloak...');
+        const auth = await keycloak.init({
+          onLoad: 'login-required',
+          checkLoginIframe: false,
+          pkceMethod: 'S256',
+        });
+
+        keycloakInitialized = true;
         setAuthenticated(auth);
+        
         if (auth) {
+          console.log('[Auth] Authenticated as:', keycloak.tokenParsed?.preferred_username);
           setToken(keycloak.token || null);
           setUsername(keycloak.tokenParsed?.preferred_username || null);
           
           const keycloakRoles = keycloak.realmAccess?.roles || [];
           const functionalRoles = ['ADMIN', 'FACULTY', 'LIBRARIAN', 'STUDENT'].filter(r => keycloakRoles.includes(r));
           
-          if (functionalRoles.length === 0) {
-            functionalRoles.push('UNASSIGNED');
-          }
-          
+          if (functionalRoles.length === 0) functionalRoles.push('UNASSIGNED');
           setAllRoles(functionalRoles);
 
-          // If current role is not in the new roles list, or no role set, pick highest priority
           if (!role || !functionalRoles.includes(role)) {
             const defaultRole = functionalRoles[0];
             setRole(defaultRole);
             localStorage.setItem('scholario_active_role', defaultRole);
           }
         }
+      } catch (err) {
+        console.error('[Auth] Initialization failed. Check if Keycloak server is running and realm "scholario" exists.', err);
+      } finally {
+        isKeycloakInitializing = false;
         setLoading(false);
-      })
-      .catch(() => {
-        console.error('Keycloak initialization failed');
-        setLoading(false);
-      });
+      }
+    };
+
+    initializeKeycloak();
   }, []);
 
   const switchRole = (newRole: string) => {
