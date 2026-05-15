@@ -121,6 +121,7 @@ const ActionCard = ({ title, description, icon: Icon, color, delay, onClick }: A
 export const LibrarianDashboard = () => {
   const [issueMutation] = useMutation(ISSUE_BOOK);
   const [returnMutation] = useMutation(RETURN_BOOK);
+  const { loading, error, data } = useQuery<{ getDueDates: IssueResponse[] }>(GET_DUE_DATES);
 
   // Note: These handlers will be used by modals in a later task
   // Keeping them here as placeholders for now to satisfy mutation logic requirement
@@ -206,7 +207,7 @@ export const LibrarianDashboard = () => {
             />
           </div>
           
-          <div className="p-6 bg-indigo-50 rounded-3xl border border-indigo-100 animate-slide-up opacity-0" style={{ animationDelay: '700ms' }}>
+          <div className="p-6 bg-indigo-50 rounded-3xl border border-indigo-100 animate-slide-up opacity-0" style={{ animationDelay: '800ms' }}>
             <h4 className="font-bold text-indigo-900 mb-2 flex items-center gap-2">
               <History size={18} />
               Quick Tip
@@ -217,14 +218,77 @@ export const LibrarianDashboard = () => {
           </div>
         </div>
 
-        {/* Right Column: Placeholder for Logs/Activity */}
-        <div className="lg:col-span-2 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200 min-h-[400px] flex items-center justify-center animate-slide-up opacity-0" style={{ animationDelay: '800ms' }}>
-          <div className="text-center p-10">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-              <History size={32} />
-            </div>
-            <h4 className="text-gray-900 font-bold text-lg mb-1">Activity Log Coming Soon</h4>
-            <p className="text-gray-500 max-w-xs mx-auto">This area will display real-time circulation updates and pending reservation requests.</p>
+        {/* Right Column: Activity Logs */}
+        <div 
+          className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden animate-slide-up opacity-0" 
+          style={{ animationDelay: '700ms' }}
+        >
+          <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+              <History size={18} className="text-indigo-600" />
+              Recent Circulation
+            </h3>
+            <span className="text-xs font-medium px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg">
+              Live Log
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Book</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Student</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Due Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic">
+                      Loading circulation data...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-10 text-center text-rose-500 italic">
+                      Failed to load activity log.
+                    </td>
+                  </tr>
+                ) : data?.getDueDates.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic">
+                      No recent activity found.
+                    </td>
+                  </tr>
+                ) : (
+                  data?.getDueDates.map((issue) => (
+                    <tr key={issue.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-gray-900">Book #{issue.bookId}</div>
+                        <div className="text-xs text-gray-400">ID: {issue.id.substring(0, 8)}...</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        User #{issue.userId}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          issue.state.type === 'RETURNED' ? 'bg-emerald-100 text-emerald-800' : 
+                          issue.state.type === 'OVERDUE' ? 'bg-rose-100 text-rose-800' : 
+                          'bg-amber-100 text-amber-800'
+                        }`}>
+                          {issue.state.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                        {new Date(issue.dueDate).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
