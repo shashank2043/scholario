@@ -1,7 +1,6 @@
 package com.scholario.review.service;
 
 import com.scholario.book.model.Draft;
-import com.scholario.book.model.Published;
 import com.scholario.book.service.BookService;
 import com.scholario.review.model.*;
 import com.scholario.review.repository.ReviewHistoryRepository;
@@ -10,7 +9,6 @@ import com.scholario.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

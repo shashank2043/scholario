@@ -2,8 +2,6 @@ package com.scholario.reserve.dto;
 
 import com.scholario.reserve.model.Reservation;
 
-import java.time.LocalDateTime;
-
 public record ReservationResponse(
     Long id,
     Long bookId,

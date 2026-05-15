@@ -1,5 +1,6 @@
 extend type Mutation {
     createDepartment(input: DepartmentInput!): Department
+    deleteDepartment(id: ID!): Boolean
 }
 
 input DepartmentInput {

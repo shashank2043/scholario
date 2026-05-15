@@ -52,22 +52,41 @@ public class SecurityConfig {
             return null;
         }
 
+        log.info("Initializing Keycloak JwtDecoder with issuer: {}", issuerUri);
+        
+        // Custom RestTemplate with increased timeouts for local development flakiness
+        org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(10000); // 10 seconds
+        requestFactory.setReadTimeout(10000);    // 10 seconds
+        
+        org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate(requestFactory);
+        
         try {
-            org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-            requestFactory.setConnectTimeout(5000); // Reduced timeout for faster failure
-            requestFactory.setReadTimeout(5000);
-            
-            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate(requestFactory);
-            
-            log.info("Attempting to initialize Keycloak JwtDecoder with issuer: {}", issuerUri);
-            JwtDecoder decoder = NimbusJwtDecoder.withIssuerLocation(issuerUri)
+            NimbusJwtDecoder decoder = NimbusJwtDecoder.withIssuerLocation(issuerUri)
                     .restOperations(restTemplate)
                     .build();
-            log.info("Keycloak JwtDecoder initialized successfully.");
+            log.info("Keycloak JwtDecoder (OIDC Discovery) initialized successfully.");
             return decoder;
         } catch (Exception e) {
-            log.warn("Keycloak is unreachable or misconfigured. Keycloak authentication will be unavailable. Error: {}", e.getMessage());
-            return null;
+            log.warn("OIDC Discovery failed. Attempting direct JWK Set URI initialization. Error: {}", e.getMessage());
+            
+            // Construct JWK Set URI manually as fallback
+            String jwkSetUri = issuerUri.endsWith("/") ? 
+                    issuerUri + "protocol/openid-connect/certs" : 
+                    issuerUri + "/protocol/openid-connect/certs";
+                    
+            log.info("Attempting fallback to JWK Set URI: {}", jwkSetUri);
+            
+            try {
+                NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri)
+                        .restOperations(restTemplate)
+                        .build();
+                log.info("Keycloak JwtDecoder (Direct JWKS) initialized successfully.");
+                return decoder;
+            } catch (Exception ex) {
+                log.error("Total failure to initialize JwtDecoder. Keycloak integration is broken. Error: {}", ex.getMessage());
+                return null;
+            }
         }
     }
 

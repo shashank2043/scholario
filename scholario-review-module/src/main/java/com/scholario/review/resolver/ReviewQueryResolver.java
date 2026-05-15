@@ -1,7 +1,6 @@
 package com.scholario.review.resolver;
 
 import com.scholario.review.dto.ReviewResponse;
-import com.scholario.review.model.ReviewHistory;
 import com.scholario.review.model.ReviewRecord;
 import com.scholario.review.service.ReviewService;
 import org.springframework.graphql.data.method.annotation.Argument;

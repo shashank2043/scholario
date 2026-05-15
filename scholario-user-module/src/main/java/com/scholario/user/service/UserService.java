@@ -147,6 +147,15 @@ public class UserService {
     }
 
     @Transactional
+    public boolean deleteDepartment(Long id) {
+        if (departmentRepository.existsById(id)) {
+            departmentRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional
     public void syncUserFromExternalProvider(String username, String email, String fullName, List<String> roles) {
         Optional<User> userOptional = userRepository.findByUsername(username);
         Set<Role> externalRoles = resolveExternalRoles(roles);

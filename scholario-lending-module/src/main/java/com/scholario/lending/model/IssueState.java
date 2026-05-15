@@ -1,5 +1,6 @@
 package com.scholario.lending.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -13,6 +14,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public sealed interface IssueState permits Requested, Issued, Returned, Overdue {
 
     String name();
+
+    @JsonIgnore
+    default String getType() {
+        return name();
+    }
 
     default boolean canTransitionTo(IssueState newState) {
         return switch (this) {
