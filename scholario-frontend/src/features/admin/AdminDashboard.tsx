@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
+import { Link } from 'react-router-dom';
 import { ShieldAlert, CheckCircle, Clock, Users, Activity, Lock } from 'lucide-react';
 
 const GET_VIOLATIONS = gql`
@@ -94,7 +95,7 @@ export const AdminDashboard = () => {
         <div className="xl:col-span-2 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '500ms' }}>
           <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
             <h4 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Security Violations Engine</h4>
-            <button className="text-[11px] text-slate-500 font-bold uppercase hover:text-slate-900 transition-colors tracking-widest">Full Audit Log &rarr;</button>
+            <Link to="/admin/security" className="text-[11px] text-slate-500 font-bold uppercase hover:text-slate-900 transition-colors tracking-widest">Full Audit Log &rarr;</Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -104,13 +105,15 @@ export const AdminDashboard = () => {
                   <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</th>
                   <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Metric</th>
                   <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                  <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Detected At</th>
+                  <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-mono">
                 {loading ? (
-                  <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-xs uppercase font-bold animate-pulse">Synchronizing Telemetry...</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-xs uppercase font-bold animate-pulse">Synchronizing Telemetry...</td></tr>
                 ) : data?.getViolationReports.length === 0 ? (
-                  <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-xs uppercase font-bold tracking-widest">Zero Violations Detected</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-xs uppercase font-bold tracking-widest">Zero Violations Detected</td></tr>
                 ) : data?.getViolationReports.slice(0, 8).map((v) => (
                   <tr key={v.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="px-6 py-4 font-bold text-slate-900 text-[13px]">{v.username}</td>
@@ -120,13 +123,18 @@ export const AdminDashboard = () => {
                         v.severity === 'HIGH' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-700 border-slate-200'
                       }`}>{v.severity}</span>
                     </td>
-                    <td className="px-6 py-4 text-[12px] text-slate-600 group-hover:text-slate-900 transition-colors truncate max-w-[240px]">{v.description}</td>
+                    <td className="px-6 py-4 text-[12px] text-slate-600 group-hover:text-slate-900 transition-colors truncate max-w-[200px]">{v.description}</td>
                     <td className="px-6 py-4">
                       {v.resolved ? (
                         <span className="flex items-center text-emerald-600 text-[10px] font-black uppercase tracking-widest"><CheckCircle size={12} className="mr-1.5" /> Resolved</span>
                       ) : (
                         <span className="flex items-center text-amber-600 text-[10px] font-black uppercase tracking-widest"><Clock size={12} className="mr-1.5" /> Pending</span>
                       )}
+                    </td>
+                    <td className="px-6 py-4 text-[11px] text-slate-500 font-mono">{new Date(v.detectedAt).toLocaleString()}</td>
+                    <td className="px-6 py-4 space-x-2">
+                      <button className="px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded btn-tactile">Isolate</button>
+                      <button className="px-2 py-1 bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest rounded btn-tactile">Resolve</button>
                     </td>
                   </tr>
                 ))}
