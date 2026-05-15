@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { ShieldAlert, CheckCircle, Clock, LayoutGrid, Users } from 'lucide-react';
+import { ShieldAlert, CheckCircle, Clock, Users, Activity, Lock } from 'lucide-react';
 
 const GET_VIOLATIONS = gql`
   query GetViolations {
@@ -30,10 +30,16 @@ interface ViolationData {
   getViolationReports: Violation[];
 }
 
-const StatCard = ({ icon: Icon, label, value, color }: { icon: any, label: string, value: string | number, color: string }) => (
-  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center space-x-4">
-    <div className={`p-3 rounded-lg ${color}`}><Icon size={24} /></div>
-    <div><p className="text-sm text-gray-500 font-medium">{label}</p><p className="text-2xl font-bold text-gray-800">{value}</p></div>
+const StatCard = ({ icon: Icon, label, value, color, delay }: { icon: any, label: string, value: string | number, color: string, delay: string }) => (
+  <div 
+    className={`bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex items-center space-x-4 animate-slide-up opacity-0 card-tactile hover:border-slate-300 transition-colors cursor-default`}
+    style={{ animationDelay: delay }}
+  >
+    <div className={`p-2.5 rounded-md ${color}`}><Icon size={20} /></div>
+    <div>
+      <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{label}</p>
+      <p className="text-xl font-bold text-slate-900 tracking-tight">{value}</p>
+    </div>
   </div>
 );
 
@@ -41,10 +47,9 @@ export const AdminDashboard = () => {
   const { data, loading, error } = useQuery<ViolationData>(GET_VIOLATIONS);
 
   if (error) return (
-    <div className="p-8 bg-red-50 border border-red-100 rounded-xl text-red-700">
-      <h4 className="font-bold flex items-center mb-2"><ShieldAlert className="mr-2" /> Data Fetching Error</h4>
-      <p>Could not retrieve system metrics. Please ensure the backend services are operational.</p>
-      <p className="text-xs mt-2">Error Detail: {error.message}</p>
+    <div className="p-6 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 animate-slide-up">
+      <h4 className="font-bold flex items-center mb-1 text-sm"><ShieldAlert size={18} className="mr-2" /> SYSTEM_ERROR_LINK_FAILURE</h4>
+      <p className="text-sm">Unable to synchronize with telemetry nodes. Infrastructure monitoring offline.</p>
     </div>
   );
 
@@ -52,73 +57,97 @@ export const AdminDashboard = () => {
   const criticalViolations = data?.getViolationReports.filter(v => v.severity === 'CRITICAL').length || 0;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h3 className="text-2xl font-bold text-gray-800">Administrator Command Center</h3>
-        <p className="text-gray-500">Global system monitoring, security audits, and infrastructure management.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard icon={ShieldAlert} label="Total Violations" value={data?.getViolationReports.length || 0} color="bg-indigo-50 text-indigo-600" />
-        <StatCard icon={Clock} label="Pending Action" value={pendingViolations} color="bg-amber-50 text-amber-600" />
-        <StatCard icon={ShieldAlert} label="Critical Alerts" value={criticalViolations} color="bg-red-50 text-red-600" />
-        <StatCard icon={Users} label="Total Users" value="Live Data" color="bg-blue-50 text-blue-600" />
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-            <h4 className="font-bold text-gray-800">System Violations Log</h4>
-            <button className="text-sm text-indigo-600 font-medium hover:underline">View All Reports</button>
+    <div className="space-y-6 bg-slate-50 min-h-screen -m-8 p-8">
+      {/* Enterprise Header */}
+      <header className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex justify-between items-center animate-slide-up">
+        <div className="flex items-center space-x-4">
+          <div className="bg-slate-900 p-2 rounded-lg text-white">
+            <Activity size={24} />
           </div>
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">User</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Severity</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Issue</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {loading ? (
-                <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-400">Synchronizing system logs...</td></tr>
-              ) : data?.getViolationReports.length === 0 ? (
-                <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-400">No security violations detected.</td></tr>
-              ) : data?.getViolationReports.slice(0, 10).map((v) => (
-                <tr key={v.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-800 text-sm">{v.username}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
-                      v.severity === 'CRITICAL' ? 'bg-red-50 text-red-700 border-red-100' :
-                      v.severity === 'HIGH' ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-blue-50 text-blue-700 border-blue-100'
-                    }`}>{v.severity}</span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 truncate max-w-[200px]">{v.description}</td>
-                  <td className="px-6 py-4">
-                    {v.resolved ? (
-                      <span className="flex items-center text-green-600 text-xs font-bold"><CheckCircle size={14} className="mr-1" /> SECURE</span>
-                    ) : (
-                      <span className="flex items-center text-amber-600 text-xs font-bold"><Clock size={14} className="mr-1" /> INVESTIGATING</span>
-                    )}
-                  </td>
+          <div>
+            <div className="flex items-center space-x-2">
+              <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase">System Control Hub</h3>
+              <div className="flex items-center space-x-1 px-2 py-0.5 bg-emerald-50 border border-emerald-100 rounded-full">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="text-[10px] font-black text-emerald-700 uppercase">Live</span>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 font-medium font-mono uppercase">Node ID: SCHOLARIO-PRD-01 // Global Oversight Mode</p>
+          </div>
+        </div>
+        
+        <button className="flex items-center space-x-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-xs uppercase tracking-widest transition-all btn-tactile shadow-sm shadow-rose-200 border border-rose-700">
+          <Lock size={14} />
+          <span>Emergency Lockdown</span>
+        </button>
+      </header>
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={ShieldAlert} label="System Violations" value={data?.getViolationReports.length || 0} color="bg-slate-100 text-slate-700" delay="100ms" />
+        <StatCard icon={Clock} label="Pending Resolution" value={pendingViolations} color="bg-amber-100 text-amber-700" delay="200ms" />
+        <StatCard icon={ShieldAlert} label="Critical Alerts" value={criticalViolations} color="bg-rose-100 text-rose-700" delay="300ms" />
+        <StatCard icon={Users} label="Node Users" value="1,248" color="bg-sky-100 text-sky-700" delay="400ms" />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '500ms' }}>
+          <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+            <h4 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Security Violations Engine</h4>
+            <button className="text-[11px] text-slate-500 font-bold uppercase hover:text-slate-900 transition-colors tracking-widest">Full Audit Log &rarr;</button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 border-b border-slate-200">
+                  <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject</th>
+                  <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</th>
+                  <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Metric</th>
+                  <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-mono">
+                {loading ? (
+                  <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-xs uppercase font-bold animate-pulse">Synchronizing Telemetry...</td></tr>
+                ) : data?.getViolationReports.length === 0 ? (
+                  <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-xs uppercase font-bold tracking-widest">Zero Violations Detected</td></tr>
+                ) : data?.getViolationReports.slice(0, 8).map((v) => (
+                  <tr key={v.id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-6 py-4 font-bold text-slate-900 text-[13px]">{v.username}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-0.5 text-[9px] font-black rounded border ${
+                        v.severity === 'CRITICAL' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                        v.severity === 'HIGH' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-700 border-slate-200'
+                      }`}>{v.severity}</span>
+                    </td>
+                    <td className="px-6 py-4 text-[12px] text-slate-600 group-hover:text-slate-900 transition-colors truncate max-w-[240px]">{v.description}</td>
+                    <td className="px-6 py-4">
+                      {v.resolved ? (
+                        <span className="flex items-center text-emerald-600 text-[10px] font-black uppercase tracking-widest"><CheckCircle size={12} className="mr-1.5" /> Resolved</span>
+                      ) : (
+                        <span className="flex items-center text-amber-600 text-[10px] font-black uppercase tracking-widest"><Clock size={12} className="mr-1.5" /> Pending</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="space-y-8">
-          <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-            <h4 className="font-bold text-gray-800 mb-4 flex items-center"><LayoutGrid size={18} className="mr-2 text-indigo-600" /> Infrastructure</h4>
-            <div className="space-y-3">
-              <button className="w-full text-left p-4 rounded-lg border border-gray-50 hover:border-indigo-100 hover:bg-indigo-50 transition-all group">
-                <p className="font-bold text-sm text-gray-800 group-hover:text-indigo-700">Department Management</p>
-                <p className="text-xs text-gray-500">Configure academic units and codes</p>
+        <div className="space-y-6 animate-slide-up opacity-0" style={{ animationDelay: '600ms' }}>
+          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+            <h4 className="text-sm font-black text-slate-900 uppercase tracking-tighter mb-4 flex items-center">
+              <Lock size={16} className="mr-2 text-slate-400" /> Administrative Access
+            </h4>
+            <div className="space-y-2">
+              <button className="w-full text-left p-4 rounded-lg border border-slate-100 hover:border-slate-300 hover:bg-slate-50 transition-all group btn-tactile">
+                <p className="font-bold text-xs text-slate-900 uppercase tracking-wide">Infrastructure Auth</p>
+                <p className="text-[10px] text-slate-500 font-medium">Verify node permissions</p>
               </button>
-              <button className="w-full text-left p-4 rounded-lg border border-gray-50 hover:border-indigo-100 hover:bg-indigo-50 transition-all group">
-                <p className="font-bold text-sm text-gray-800 group-hover:text-indigo-700">User Role Audits</p>
-                <p className="text-xs text-gray-500">Review and verify portal permissions</p>
+              <button className="w-full text-left p-4 rounded-lg border border-slate-100 hover:border-slate-300 hover:bg-slate-50 transition-all group btn-tactile">
+                <p className="font-bold text-xs text-slate-900 uppercase tracking-wide">Audit Protocols</p>
+                <p className="text-[10px] text-slate-500 font-medium">Global security override</p>
               </button>
             </div>
           </div>
