@@ -125,20 +125,20 @@ export const LibrarianDashboard = () => {
 
   // Note: These handlers will be used by modals in a later task
   // Keeping them here as placeholders for now to satisfy mutation logic requirement
-  const handleIssue = async (bookId: string, userId: string) => {
+  const _handleIssue = async (bookId: string, userId: string) => {
     try {
       await issueMutation({ variables: { bookId, userId } });
       alert('Book issued successfully!');
-    } catch (err) {
+    } catch (_err) {
       alert('Failed to issue book');
     }
   };
 
-  const handleReturn = async (issueId: string, userId: string) => {
+  const _handleReturn = async (issueId: string, userId: string) => {
     try {
       await returnMutation({ variables: { issueId, userId } });
       alert('Book returned successfully!');
-    } catch (err) {
+    } catch (_err) {
       alert('Failed to return book');
     }
   };
