@@ -1,5 +1,5 @@
 import React from 'react';
-import { gql } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import { 
   BookOpen, 
@@ -33,6 +33,34 @@ const RETURN_BOOK = gql`
     }
   }
 `;
+
+const GET_DUE_DATES = gql`
+  query GetDueDates {
+    getDueDates {
+      id
+      bookId
+      userId
+      issueDate
+      dueDate
+      returnDate
+      state {
+        type
+      }
+    }
+  }
+`;
+
+interface IssueResponse {
+  id: string;
+  bookId: string;
+  userId: string;
+  issueDate: string;
+  dueDate: string;
+  returnDate: string | null;
+  state: {
+    type: string;
+  };
+}
 
 interface StatCardProps {
   title: string;
