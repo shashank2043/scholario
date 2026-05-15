@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
-import { useQuery } from '@apollo/client/react';
+import { useQuery, useLazyQuery } from '@apollo/client/react';
+import { useState } from 'react';
 import { Book, Clock, AlertCircle, History, Search, Bookmark } from 'lucide-react';
 
 const GET_MY_ISSUES = gql`
@@ -32,8 +33,35 @@ interface MyIssuesData {
   getMyIssuedBooks: Issue[];
 }
 
+const SEARCH_BOOKS = gql`
+  query SearchBooks($title: String) {
+    searchBooks(title: $title) {
+      id
+      title
+      isbn
+    }
+  }
+`;
+
+interface SearchBooksData {
+  searchBooks: {
+    id: string;
+    title: string;
+    isbn: string;
+  }[];
+}
+
 export const StudentDashboard = () => {
+  const [searchTerm, setSearchTerm] = useState('');
   const { data, loading, error } = useQuery<MyIssuesData>(GET_MY_ISSUES);
+  
+  const [searchBooks, { data: searchData, loading: searching }] = useLazyQuery<SearchBooksData>(SEARCH_BOOKS);
+
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      searchBooks({ variables: { title: searchTerm } });
+    }
+  };
 
   const booksHeld = data?.getMyIssuedBooks.length || 0;
   
@@ -166,13 +194,38 @@ export const StudentDashboard = () => {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300" size={20} />
                 <input 
                   type="text" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   placeholder="Find a book..." 
                   className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl focus:ring-2 focus:ring-white/50 outline-none placeholder:text-indigo-200 text-white font-medium"
                 />
               </div>
-              <button className="btn-tactile w-full py-4 bg-white text-indigo-600 rounded-2xl font-bold hover:bg-indigo-50 transition-all shadow-lg">
-                Search Library
+              <button 
+                onClick={handleSearch}
+                disabled={searching}
+                className="btn-tactile w-full py-4 bg-white text-indigo-600 rounded-2xl font-bold hover:bg-indigo-50 transition-all shadow-lg disabled:opacity-50"
+              >
+                {searching ? 'Searching...' : 'Search Library'}
               </button>
+
+              {searchData?.searchBooks && (
+                <div className="mt-4 space-y-2 animate-fade-in">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200">Results</p>
+                  {searchData.searchBooks.slice(0, 3).map((book: any) => (
+                    <div key={book.id} className="p-3 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between group">
+                      <div className="truncate pr-2">
+                        <p className="text-xs font-bold truncate">{book.title}</p>
+                        <p className="text-[9px] text-indigo-300 font-mono uppercase">{book.isbn}</p>
+                      </div>
+                      <button className="px-2 py-1 bg-white text-indigo-600 text-[9px] font-black uppercase rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">Hold</button>
+                    </div>
+                  ))}
+                  {searchData.searchBooks.length === 0 && (
+                    <p className="text-xs text-indigo-200 italic">No matches found.</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
