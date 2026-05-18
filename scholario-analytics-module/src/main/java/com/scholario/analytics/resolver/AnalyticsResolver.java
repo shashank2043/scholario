@@ -1,9 +1,6 @@
 package com.scholario.analytics.resolver;
 
-import com.scholario.analytics.dto.BookUsageAnalytics;
-import com.scholario.analytics.dto.CourseMaterialStats;
-import com.scholario.analytics.dto.FacultyPerformance;
-import com.scholario.analytics.dto.StudentEngagement;
+import com.scholario.analytics.dto.*;
 import com.scholario.analytics.service.AnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -39,5 +36,11 @@ public class AnalyticsResolver {
     @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
     public StudentEngagement getStudentEngagement(@Argument Long studentId) {
         return analyticsService.getStudentEngagement(studentId);
+    }
+
+    @QueryMapping
+    @PreAuthorize("hasRole('LIBRARIAN')")
+    public LibrarianStats getLibrarianStats() {
+        return analyticsService.getLibrarianStats();
     }
 }

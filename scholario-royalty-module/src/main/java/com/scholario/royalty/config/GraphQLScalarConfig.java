@@ -17,7 +17,8 @@ import java.util.Locale;
 @Configuration
 public class GraphQLScalarConfig {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
     public static final GraphQLScalarType JSON_SCALAR = GraphQLScalarType.newScalar()
             .name("JSON")

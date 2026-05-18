@@ -20,8 +20,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, subtitle, 
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6 z-50 animate-fade-in">
-      <div className="bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl animate-slide-up relative">
-        <div className="px-10 py-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+      <div className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl animate-slide-up relative">
+        <div className="px-10 py-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30 rounded-t-[2.5rem]">
           <div className="space-y-1">
             <h2 className="text-2xl font-black text-slate-900">{title}</h2>
             {subtitle && <p className="text-slate-400 text-sm font-medium">{subtitle}</p>}

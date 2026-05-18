@@ -33,6 +33,9 @@ public class Reservation {
     @Column(name = "status", columnDefinition = "json")
     private ReservationStatus status;
 
+    @Column(name = "status_type", nullable = false)
+    private String statusType;
+
     @PrePersist
     protected void onCreate() {
         if (reservedAt == null) {
@@ -40,6 +43,9 @@ public class Reservation {
         }
         if (status == null) {
             status = new Pending();
+        }
+        if (statusType == null) {
+            statusType = status.name();
         }
     }
 
@@ -89,5 +95,16 @@ public class Reservation {
 
     public void setStatus(ReservationStatus status) {
         this.status = status;
+        if (status != null) {
+            this.statusType = status.name();
+        }
+    }
+
+    public String getStatusType() {
+        return statusType;
+    }
+
+    public void setStatusType(String statusType) {
+        this.statusType = statusType;
     }
 }

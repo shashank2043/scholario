@@ -3,6 +3,14 @@ extend type Query {
     getCourseMaterialStats(courseId: ID!): CourseMaterialStats
     getFacultyPerformance(facultyId: ID!): FacultyPerformance
     getStudentEngagement(studentId: ID!): StudentEngagement
+    getLibrarianStats: LibrarianStats
+}
+
+type LibrarianStats {
+    activeIssues: Int!
+    overdueIssues: Int!
+    returnedToday: Int!
+    activeReservations: Int!
 }
 
 type BookUsageAnalytics {

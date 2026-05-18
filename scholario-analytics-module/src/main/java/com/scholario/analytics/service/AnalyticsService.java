@@ -1,9 +1,6 @@
 package com.scholario.analytics.service;
 
-import com.scholario.analytics.dto.BookUsageAnalytics;
-import com.scholario.analytics.dto.CourseMaterialStats;
-import com.scholario.analytics.dto.FacultyPerformance;
-import com.scholario.analytics.dto.StudentEngagement;
+import com.scholario.analytics.dto.*;
 import com.scholario.book.model.Book;
 import com.scholario.book.repository.BookRepository;
 import com.scholario.content.model.DigitalContent;
@@ -20,6 +17,8 @@ import com.scholario.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -114,5 +113,14 @@ public class AnalyticsService {
         long reservations = reservationRepository.countByUserId(studentId);
 
         return new StudentEngagement(studentId, student.getFullName(), borrowed, digital, reservations);
+    }
+
+    public LibrarianStats getLibrarianStats() {
+        long activeIssues = issueRecordRepository.countByStateTypeNot("RETURNED");
+        long overdue = issueRecordRepository.countByStateType("OVERDUE");
+        long returnedToday = issueRecordRepository.countByReturnDateAfter(LocalDateTime.now().with(LocalTime.MIN));
+        long reservations = reservationRepository.countByStatusType("Pending");
+
+        return new LibrarianStats(activeIssues, overdue, returnedToday, reservations);
     }
 }

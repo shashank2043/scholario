@@ -5,9 +5,19 @@ import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import { PortalLayout, NavItem } from './features/shared/PortalLayout';
 import { FacultyDashboard } from './features/faculty/FacultyDashboard';
 import { BookManagement } from './features/faculty/BookManagement';
+import { CourseManagement } from './features/faculty/CourseManagement';
+import { FacultySettings } from './features/faculty/FacultySettings';
 import { AdminDashboard } from './features/admin/AdminDashboard';
+import { DepartmentsManagement } from './features/admin/DepartmentsManagement';
+import { SecurityAudit } from './features/admin/SecurityAudit';
+import { AdminSettings } from './features/admin/AdminSettings';
 import { StudentDashboard } from './features/student/StudentDashboard';
+import { StudentSearch } from './features/student/StudentSearch';
+import { StudentCourses } from './features/student/StudentCourses';
+import { StudentSettings } from './features/student/StudentSettings';
 import { LibrarianDashboard } from './features/librarian/LibrarianDashboard';
+import { LibrarianStock } from './features/librarian/LibrarianStock';
+import { LibrarianSettings } from './features/librarian/LibrarianSettings';
 import { UnassignedPage } from './features/auth/UnassignedPage';
 import { 
   LayoutDashboard, BookOpen, GraduationCap, Settings, 
@@ -90,31 +100,31 @@ function App() {
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<FacultyDashboard />} />
               <Route path="books" element={<BookManagement />} />
-              <Route path="courses" element={<div>Course Content</div>} />
-              <Route path="settings" element={<div>Settings Content</div>} />
+              <Route path="courses" element={<CourseManagement />} />
+              <Route path="settings" element={<FacultySettings />} />
             </Route>
 
             <Route path="/admin" element={<AdminPortal />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="security" element={<AdminDashboard />} />
-              <Route path="departments" element={<div>Departments Management</div>} />
-              <Route path="settings" element={<div>Settings Content</div>} />
+              <Route path="security" element={<SecurityAudit />} />
+              <Route path="departments" element={<DepartmentsManagement />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
 
             <Route path="/student" element={<StudentPortal />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<StudentDashboard />} />
-              <Route path="search" element={<div>Search Books</div>} />
-              <Route path="courses" element={<div>My Courses</div>} />
-              <Route path="settings" element={<div>Settings Content</div>} />
+              <Route path="search" element={<StudentSearch />} />
+              <Route path="courses" element={<StudentCourses />} />
+              <Route path="settings" element={<StudentSettings />} />
             </Route>
 
             <Route path="/librarian" element={<LibrarianPortal />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<LibrarianDashboard />} />
-              <Route path="stock" element={<div>Stock Management</div>} />
-              <Route path="settings" element={<div>Settings Content</div>} />
+              <Route path="stock" element={<LibrarianStock />} />
+              <Route path="settings" element={<LibrarianSettings />} />
             </Route>
 
             <Route path="/unassigned" element={<UnassignedPage />} />

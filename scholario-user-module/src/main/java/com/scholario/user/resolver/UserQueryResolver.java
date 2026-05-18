@@ -49,6 +49,12 @@ public class UserQueryResolver {
     }
 
     @QueryMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    @QueryMapping
     public List<Department> getDepartments() {
         return userService.getDepartments();
     }

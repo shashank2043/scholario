@@ -48,4 +48,16 @@ public class UserMutationResolver {
     public Department createDepartment(@Valid @Argument DepartmentInput input) {
         return userService.createDepartment(input);
     }
+
+    @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public Department updateDepartment(@Argument Long id, @Valid @Argument DepartmentInput input) {
+        return userService.updateDepartment(id, input);
+    }
+
+    @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public boolean deleteDepartment(@Argument Long id) {
+        return userService.deleteDepartment(id);
+    }
 }

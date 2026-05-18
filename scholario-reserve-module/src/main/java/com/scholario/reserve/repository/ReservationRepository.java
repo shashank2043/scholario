@@ -17,4 +17,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     long countByBookId(Long bookId);
 
     long countByUserId(Long userId);
+
+    long countByStatusType(String statusType);
 }

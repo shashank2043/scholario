@@ -26,6 +26,12 @@ public interface IssueRecordRepository extends JpaRepository<IssueRecord, Long> 
 
     long countByUserId(Long userId);
 
+    long countByStateTypeNot(String stateType);
+
+    long countByStateType(String stateType);
+
+    long countByReturnDateAfter(LocalDateTime startOfDay);
+
     @Query("SELECT i.bookId AS bookId, COUNT(i) AS issueCount FROM IssueRecord i GROUP BY i.bookId")
     List<BookIssueCount> countIssuesByBook();
 

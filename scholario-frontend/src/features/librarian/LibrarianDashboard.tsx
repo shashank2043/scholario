@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router-dom';
 import { 
   BookOpen, 
   AlertCircle, 
@@ -69,6 +70,24 @@ const GET_BOOKS = gql`
     }
   }
 `;
+
+const GET_LIBRARIAN_STATS = gql`
+  query GetLibrarianStats {
+    getLibrarianStats {
+      activeIssues
+      overdueIssues
+      returnedToday
+      activeReservations
+    }
+  }
+`;
+
+interface LibrarianStats {
+  activeIssues: number;
+  overdueIssues: number;
+  returnedToday: number;
+  activeReservations: number;
+}
 
 interface IssueResponse {
   id: string;
@@ -149,6 +168,7 @@ const ActionCard = ({ title, description, icon: Icon, color, delay, onClick }: A
 };
 
 export const LibrarianDashboard = () => {
+  const navigate = useNavigate();
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState('');
@@ -161,6 +181,7 @@ export const LibrarianDashboard = () => {
   const { loading, error, data, refetch } = useQuery<{ getDueDates: IssueResponse[] }>(GET_DUE_DATES);
   const { data: studentsData } = useQuery<{ getStudentList: User[] }>(GET_STUDENTS);
   const { data: booksData } = useQuery<{ getAllBooks: Book[] }>(GET_BOOKS);
+  const { data: statsData } = useQuery<{ getLibrarianStats: LibrarianStats }>(GET_LIBRARIAN_STATS);
 
   const handleIssue = async () => {
     if (!selectedBook || !selectedStudent) return;
@@ -220,7 +241,10 @@ export const LibrarianDashboard = () => {
             <Download size={18} />
             Export Logs
           </button>
-          <button className="btn-tactile flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all shadow-md">
+          <button 
+            onClick={() => navigate('/librarian/stock')}
+            className="btn-tactile flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all shadow-md"
+          >
             <Plus size={18} />
             Add Stock
           </button>
@@ -230,19 +254,27 @@ export const LibrarianDashboard = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Active Issues" value="142" delay="100ms" color="text-indigo-600 bg-indigo-600"
+          title="Active Issues" 
+          value={statsData?.getLibrarianStats.activeIssues.toString() || "0"} 
+          delay="100ms" color="text-indigo-600 bg-indigo-600"
           icon={<BookOpen size={24} />} 
         />
         <StatCard 
-          title="Overdue" value="12" delay="200ms" color="text-rose-600 bg-rose-600"
+          title="Overdue" 
+          value={statsData?.getLibrarianStats.overdueIssues.toString() || "0"} 
+          delay="200ms" color="text-rose-600 bg-rose-600"
           icon={<AlertCircle size={24} />} 
         />
         <StatCard 
-          title="Returned (Today)" value="24" delay="300ms" color="text-emerald-600 bg-emerald-600"
+          title="Returned (Today)" 
+          value={statsData?.getLibrarianStats.returnedToday.toString() || "0"} 
+          delay="300ms" color="text-emerald-600 bg-emerald-600"
           icon={<CheckCircle size={24} />} 
         />
         <StatCard 
-          title="Reservations" value="8" delay="400ms" color="text-amber-600 bg-amber-600"
+          title="Reservations" 
+          value={statsData?.getLibrarianStats.activeReservations.toString() || "0"} 
+          delay="400ms" color="text-amber-600 bg-amber-600"
           icon={<Clock size={24} />} 
         />
       </div>
@@ -327,16 +359,19 @@ export const LibrarianDashboard = () => {
                     </td>
                   </tr>
                 ) : (
-                  data?.getDueDates.map((issue: IssueResponse) => (
-                    <tr key={issue.id} className="hover:bg-gray-50/50 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-gray-900">Book #{issue.bookId}</div>
-                        <div className="text-xs text-gray-400">ID: {issue.id.substring(0, 8)}...</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        User #{issue.userId}
-                      </td>
-                      <td className="px-6 py-4">
+                  data?.getDueDates.map((issue: IssueResponse) => {
+                    const book = booksData?.getAllBooks.find((b: Book) => b.id === issue.bookId);
+                    const student = studentsData?.getStudentList.find((s: User) => s.id === issue.userId);
+                    return (
+                      <tr key={issue.id} className="hover:bg-gray-50/50 transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-gray-900">{book?.title || `Book #${issue.bookId}`}</div>
+                          <div className="text-xs text-gray-400">ID: {issue.id.substring(0, 8)}...</div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {student?.fullName || `User #${issue.userId}`}
+                        </td>
+                        <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           issue.state.type === 'RETURNED' ? 'bg-emerald-100 text-emerald-800' : 
                           issue.state.type === 'OVERDUE' ? 'bg-rose-100 text-rose-800' : 
@@ -349,7 +384,7 @@ export const LibrarianDashboard = () => {
                         {new Date(issue.dueDate).toLocaleDateString()}
                       </td>
                     </tr>
-                  ))
+                  )})
                 )}
               </tbody>
             </table>

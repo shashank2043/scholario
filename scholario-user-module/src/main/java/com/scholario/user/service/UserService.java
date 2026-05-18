@@ -134,6 +134,10 @@ public class UserService {
         return userRepository.findByRoles(Role.STUDENT);
     }
 
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
     public List<Department> getDepartments() {
         return departmentRepository.findAll();
     }
@@ -144,6 +148,31 @@ public class UserService {
         department.setName(input.name());
         department.setCode(input.code());
         return departmentRepository.save(department);
+    }
+
+    @Transactional
+    public Department updateDepartment(Long id, DepartmentInput input) {
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Department not found"));
+        department.setName(input.name());
+        department.setCode(input.code());
+        return departmentRepository.save(department);
+    }
+
+    @Transactional
+    public boolean deleteDepartment(Long id) {
+        if (!departmentRepository.existsById(id)) {
+            return false;
+        }
+        // severed links: set department to null for all users in this department
+        userRepository.findAll().stream()
+                .filter(user -> user.getDepartment() != null && user.getDepartment().getId().equals(id))
+                .forEach(user -> {
+                    user.setDepartment(null);
+                    userRepository.save(user);
+                });
+        departmentRepository.deleteById(id);
+        return true;
     }
 
     @Transactional
