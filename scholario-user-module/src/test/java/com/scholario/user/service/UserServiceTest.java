@@ -17,9 +17,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +40,9 @@ class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private KeycloakRoleSyncService keycloakRoleSyncService;
+
     @InjectMocks
     private UserService userService;
 
@@ -46,7 +55,7 @@ class UserServiceTest {
         user.setUsername("testuser");
         user.setEmail("test@test.com");
         user.setFullName("Test User");
-        user.setRoles(new java.util.HashSet<>(java.util.Set.of(Role.UNASSIGNED)));
+        user.setRoles(new HashSet<>(Set.of(Role.UNASSIGNED)));
     }
 
     @Test
@@ -84,11 +93,12 @@ class UserServiceTest {
 
         assertTrue(updatedUser.getRoles().contains(Role.ADMIN));
         assertFalse(updatedUser.getRoles().contains(Role.UNASSIGNED));
+        verify(keycloakRoleSyncService).syncRoles(anyString(), anySet());
     }
 
     @Test
     void linkFacultyToDepartment_Success() {
-        user.setRoles(new java.util.HashSet<>(java.util.Set.of(Role.FACULTY)));
+        user.setRoles(new HashSet<>(Set.of(Role.FACULTY)));
         Department dept = new Department();
         dept.setId(1L);
         dept.setName("Computer Science");
@@ -104,10 +114,10 @@ class UserServiceTest {
 
     @Test
     void linkFacultyToDepartment_Failure_NotFaculty() {
-        user.setRoles(new java.util.HashSet<>(java.util.Set.of(Role.STUDENT)));
+        user.setRoles(new HashSet<>(Set.of(Role.STUDENT)));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        assertThrows(RuntimeException.class, () -> userService.linkFacultyToDepartment(1L, 1L));
+        assertThrows(IllegalStateException.class, () -> userService.linkFacultyToDepartment(1L, 1L));
     }
 
     @Test
@@ -126,5 +136,54 @@ class UserServiceTest {
         assertEquals("Computer Science", result.getName());
         assertEquals("CS", result.getCode());
         verify(departmentRepository).save(any(Department.class));
+    }
+
+    @Test
+    void syncUserFromExternalProvider_NewUser_Success() {
+        String username = "newuser";
+        String email = "new@test.com";
+        String fullName = "New User";
+        List<String> roles = List.of("FACULTY");
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        userService.syncUserFromExternalProvider(username, email, fullName, roles);
+
+        verify(userRepository).save(any(User.class));
+        verify(keycloakRoleSyncService).syncRoles(eq(username), anySet());
+    }
+
+    @Test
+    void syncUserFromExternalProvider_ExistingUser_PruneUnassigned() {
+        String username = "testuser";
+        user.setRoles(new HashSet<>(Set.of(Role.UNASSIGNED)));
+        List<String> roles = List.of("STUDENT", "UNASSIGNED");
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        userService.syncUserFromExternalProvider(username, user.getEmail(), user.getFullName(), roles);
+
+        assertFalse(user.getRoles().contains(Role.UNASSIGNED));
+        assertTrue(user.getRoles().contains(Role.STUDENT));
+        verify(keycloakRoleSyncService).syncRoles(eq(username), anySet());
+    }
+
+    @Test
+    void syncUserFromExternalProvider_ForceCleanupSync() {
+        String username = "testuser";
+        // DB is already clean (no UNASSIGNED)
+        user.setRoles(new HashSet<>(Set.of(Role.STUDENT)));
+        // Token still has UNASSIGNED
+        List<String> roles = List.of("STUDENT", "UNASSIGNED");
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+        userService.syncUserFromExternalProvider(username, user.getEmail(), user.getFullName(), roles);
+
+        // Should still trigger sync because tokenHasStaleUnassigned is true
+        verify(keycloakRoleSyncService).syncRoles(eq(username), anySet());
     }
 }

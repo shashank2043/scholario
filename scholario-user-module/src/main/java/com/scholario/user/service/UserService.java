@@ -9,6 +9,7 @@ import com.scholario.user.model.User;
 import com.scholario.user.repository.DepartmentRepository;
 import com.scholario.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -31,6 +33,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final KeycloakRoleSyncService keycloakRoleSyncService;
 
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -93,7 +96,9 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
         user.getRoles().remove(Role.UNASSIGNED);
         user.getRoles().add(role);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        keycloakRoleSyncService.syncRoles(savedUser.getUsername(), savedUser.getRoles());
+        return savedUser;
     }
 
     @Transactional
@@ -101,7 +106,9 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
         user.getRoles().remove(role);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        keycloakRoleSyncService.syncRoles(savedUser.getUsername(), savedUser.getRoles());
+        return savedUser;
     }
 
     @Transactional
@@ -180,6 +187,12 @@ public class UserService {
         Optional<User> userOptional = userRepository.findByUsername(username);
         Set<Role> externalRoles = resolveExternalRoles(roles);
 
+        // Detect if the incoming token has UNASSIGNED but we've pruned it because other roles exist.
+        // This indicates Keycloak is out of sync with our pruning logic.
+        boolean tokenHasStaleUnassigned = roles != null && 
+                roles.stream().anyMatch(r -> "UNASSIGNED".equalsIgnoreCase(r != null ? r.trim() : "")) &&
+                !externalRoles.contains(Role.UNASSIGNED);
+
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             boolean changed = false;
@@ -197,8 +210,16 @@ public class UserService {
                 changed = true;
             }
 
-            if (changed) {
+            if (changed || tokenHasStaleUnassigned) {
                 userRepository.save(user);
+                // If we pruned UNASSIGNED, changed roles, OR the token still shows UNASSIGNED,
+                // sync back to Keycloak to ensure Keycloak is also clean.
+                if (tokenHasStaleUnassigned && !changed) {
+                    log.info("Keycloak token for {} still contains UNASSIGNED role. Forcing cleanup sync.", username);
+                } else {
+                    log.info("Triggering Keycloak role synchronization for existing user: {}", username);
+                }
+                keycloakRoleSyncService.syncRoles(username, externalRoles);
             }
         } else {
             User user = new User();
@@ -208,12 +229,19 @@ public class UserService {
             user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
             user.setRoles(externalRoles);
             userRepository.save(user);
+            
+            // If the initial sync had both functional roles and UNASSIGNED (unlikely but possible),
+            // ensure Keycloak is updated.
+            if (externalRoles.size() > 1 || !externalRoles.contains(Role.UNASSIGNED)) {
+                log.info("Triggering Keycloak role synchronization for new user: {}", username);
+                keycloakRoleSyncService.syncRoles(username, externalRoles);
+            }
         }
     }
 
     private Set<Role> resolveExternalRoles(List<String> roles) {
         if (roles == null || roles.isEmpty()) {
-            return Set.of(Role.UNASSIGNED);
+            return new java.util.HashSet<>(Set.of(Role.UNASSIGNED));
         }
 
         Set<Role> resolvedRoles = roles.stream()
@@ -228,6 +256,11 @@ public class UserService {
                 })
                 .collect(java.util.stream.Collectors.toSet());
 
-        return resolvedRoles.isEmpty() ? Set.of(Role.UNASSIGNED) : resolvedRoles;
+        // Ensure UNASSIGNED is removed if functional roles exist
+        if (resolvedRoles.size() > 1 && resolvedRoles.contains(Role.UNASSIGNED)) {
+            resolvedRoles.remove(Role.UNASSIGNED);
+        }
+
+        return resolvedRoles.isEmpty() ? new java.util.HashSet<>(Set.of(Role.UNASSIGNED)) : resolvedRoles;
     }
 }
