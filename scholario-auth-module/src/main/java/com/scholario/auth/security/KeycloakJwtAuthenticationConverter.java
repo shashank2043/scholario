@@ -30,12 +30,28 @@ public class KeycloakJwtAuthenticationConverter implements Converter<Jwt, Abstra
 
     @SuppressWarnings("unchecked")
     private Collection<? extends GrantedAuthority> extractResourceRoles(Jwt jwt) {
+        Set<String> allRoles = new java.util.HashSet<>();
+
+        // 1. Extract Realm Roles
         Map<String, Object> realmAccess = jwt.getClaim("realm_access");
-        if (realmAccess == null || !(realmAccess.get("roles") instanceof Collection)) {
-            return Set.of();
+        if (realmAccess != null && realmAccess.get("roles") instanceof Collection) {
+            allRoles.addAll((Collection<String>) realmAccess.get("roles"));
         }
-        Collection<String> roles = (Collection<String>) realmAccess.get("roles");
-        return roles.stream()
+
+        // 2. Extract Client Roles (for all clients mentioned in the token)
+        Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+        if (resourceAccess != null) {
+            resourceAccess.values().forEach(clientAccess -> {
+                if (clientAccess instanceof Map) {
+                    Map<String, Object> clientAccessMap = (Map<String, Object>) clientAccess;
+                    if (clientAccessMap.get("roles") instanceof Collection) {
+                        allRoles.addAll((Collection<String>) clientAccessMap.get("roles"));
+                    }
+                }
+            });
+        }
+
+        return allRoles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
                 .collect(Collectors.toSet());
     }

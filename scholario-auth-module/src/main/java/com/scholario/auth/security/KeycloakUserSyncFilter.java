@@ -59,14 +59,29 @@ public class KeycloakUserSyncFilter extends OncePerRequestFilter {
 
     @SuppressWarnings("unchecked")
     private List<String> extractRoles(Jwt jwt) {
+        Set<String> allRoles = new java.util.HashSet<>();
         try {
+            // 1. Extract Realm Roles
             Map<String, Object> realmAccess = jwt.getClaim("realm_access");
             if (realmAccess != null && realmAccess.get("roles") instanceof Collection) {
-                return ((Collection<String>) realmAccess.get("roles")).stream().toList();
+                allRoles.addAll((Collection<String>) realmAccess.get("roles"));
+            }
+
+            // 2. Extract Client Roles
+            Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+            if (resourceAccess != null) {
+                resourceAccess.values().forEach(clientAccess -> {
+                    if (clientAccess instanceof Map) {
+                        Map<String, Object> clientAccessMap = (Map<String, Object>) clientAccess;
+                        if (clientAccessMap.get("roles") instanceof Collection) {
+                            allRoles.addAll((Collection<String>) clientAccessMap.get("roles"));
+                        }
+                    }
+                });
             }
         } catch (Exception e) {
             log.error("Failed to extract roles from Keycloak JWT: {}", e.getMessage());
         }
-        return Collections.emptyList();
+        return allRoles.stream().toList();
     }
 }

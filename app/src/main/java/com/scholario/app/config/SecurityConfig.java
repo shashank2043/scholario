@@ -52,22 +52,17 @@ public class SecurityConfig {
             return null;
         }
 
+        log.info("Initializing Keycloak JwtDecoder with issuer: {}", issuerUri);
+        // Using withIssuerLocation is standard, but if it fails at startup, we can fallback to JWK Set URI 
+        // to avoid returning null and disabling the resource server entirely.
         try {
-            org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-            requestFactory.setConnectTimeout(5000); // Reduced timeout for faster failure
-            requestFactory.setReadTimeout(5000);
-            
-            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate(requestFactory);
-            
-            log.info("Attempting to initialize Keycloak JwtDecoder with issuer: {}", issuerUri);
-            JwtDecoder decoder = NimbusJwtDecoder.withIssuerLocation(issuerUri)
-                    .restOperations(restTemplate)
-                    .build();
-            log.info("Keycloak JwtDecoder initialized successfully.");
-            return decoder;
+            return NimbusJwtDecoder.withIssuerLocation(issuerUri).build();
         } catch (Exception e) {
-            log.warn("Keycloak is unreachable or misconfigured. Keycloak authentication will be unavailable. Error: {}", e.getMessage());
-            return null;
+            log.warn("Could not initialize JwtDecoder via discovery. Fallback to JWK Set URI might be needed. Error: {}", e.getMessage());
+            // Fallback: try to construct the JWK Set URI manually from issuer URI
+            String jwkSetUri = issuerUri + "/protocol/openid-connect/certs";
+            log.info("Attempting fallback to JWK Set URI: {}", jwkSetUri);
+            return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
         }
     }
 
