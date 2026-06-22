@@ -158,7 +158,7 @@ export const AdminSettings = () => {
             </div>
           </form>
 
-          <div className="mt-8 p-6 bg-rose-50 border border-rose-100 rounded-2xl">
+          {/* <div className="mt-8 p-6 bg-rose-50 border border-rose-100 rounded-2xl">
             <h5 className="text-xs font-black text-rose-900 uppercase tracking-tight flex items-center mb-2">
               <Shield size={16} className="mr-2" /> Danger Zone
             </h5>
@@ -166,7 +166,7 @@ export const AdminSettings = () => {
             <button className="px-4 py-2 bg-rose-600 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-rose-700 transition-all">
               Request Decommission
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
