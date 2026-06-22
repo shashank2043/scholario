@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { gql } from '@apollo/client';
-import { useLazyQuery, useMutation } from '@apollo/client/react';
-import { Search, Book, Bookmark, Info, CheckCircle, AlertCircle } from 'lucide-react';
-import { Modal } from '../../components/Modal';
+import { useLazyQuery } from '@apollo/client/react';
+import { Search, Book as BookIcon, Hash, Loader2, Bookmark, Info, ExternalLink } from 'lucide-react';
 
 const SEARCH_BOOKS = gql`
   query SearchBooks($title: String, $isbn: String) {
@@ -18,148 +17,125 @@ const SEARCH_BOOKS = gql`
   }
 `;
 
-const RESERVE_BOOK = gql`
-  mutation ReserveBook($bookId: ID!) {
-    reserveBook(bookId: $bookId) {
-      id
-      status
-      reservedAt
-    }
-  }
-`;
+interface Book {
+  id: string;
+  title: string;
+  isbn: string;
+  description: string;
+  state: {
+    type: string;
+  };
+}
 
 export const StudentSearch = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBook, setSelectedBook] = useState<any>(null);
-  
-  const [searchBooks, { data, loading }] = useLazyQuery(SEARCH_BOOKS);
-  const [reserveBook, { loading: reserving }] = useMutation(RESERVE_BOOK);
+  const [searchBooks, { data, loading, called }] = useLazyQuery<{ searchBooks: Book[] }>(SEARCH_BOOKS);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      searchBooks({ variables: { title: searchTerm } });
-    }
+    if (!searchTerm.trim()) return;
+    
+    // Simple logic: if it looks like an ISBN, search by ISBN
+    const isIsbn = /^\d{10,13}$/.test(searchTerm.replace(/-/g, ''));
+    searchBooks({
+      variables: {
+        title: isIsbn ? null : searchTerm,
+        isbn: isIsbn ? searchTerm : null
+      }
+    });
   };
-
-  const handleReserve = async (bookId: string) => {
-    try {
-      await reserveBook({ variables: { bookId } });
-      alert('Book reserved successfully!');
-      setSelectedBook(null);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to reserve book.');
-    }
-  };
-
-  const books = data?.searchBooks || [];
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <header>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Global Library Search</h2>
-        <p className="text-sm text-slate-500 font-medium">Discover academic resources and reserve them for study</p>
+    <div className="space-y-10 animate-slide-up">
+      <header className="max-w-2xl">
+        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Library Discovery Engine</h3>
+        <p className="text-xs text-slate-500 font-medium font-mono uppercase mt-1">Global Assets Registry // Access Level: Student</p>
       </header>
 
+      {/* Search Bar */}
       <div className="max-w-3xl">
         <form onSubmit={handleSearch} className="relative group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={24} />
           <input 
-            type="text" 
+            type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by title, ISBN, or keywords..."
-            className="w-full pl-14 pr-32 py-5 bg-white border-2 border-slate-100 rounded-[2rem] focus:border-indigo-500 outline-none text-lg font-medium shadow-sm transition-all"
+            placeholder="Search by Title, Author, or ISBN..."
+            className="w-full pl-14 pr-32 py-5 bg-white border border-slate-200 rounded-[2rem] shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 outline-none transition-all text-lg font-medium"
           />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={24} />
           <button 
             type="submit"
             disabled={loading}
-            className="absolute right-3 top-3 bottom-3 px-6 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all disabled:opacity-50"
+            className="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] btn-tactile disabled:opacity-50"
           >
-            {loading ? 'Searching...' : 'Explore'}
+            {loading ? <Loader2 className="animate-spin" size={16} /> : 'Execute Search'}
           </button>
         </form>
+        <div className="mt-4 flex items-center space-x-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <span>Recent Queries:</span>
+            <button onClick={() => setSearchTerm('Algorithms')} className="hover:text-indigo-600 transition-colors">Algorithms</button>
+            <button onClick={() => setSearchTerm('Distributed Systems')} className="hover:text-indigo-600 transition-colors">Distributed Systems</button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-          <div className="col-span-full py-20 text-center text-slate-400 font-black uppercase tracking-widest animate-pulse">Accessing Global Registry...</div>
-        ) : books.length === 0 && searchTerm ? (
-          <div className="col-span-full py-20 text-center bg-white rounded-[2rem] border-2 border-dashed border-slate-100">
-             <AlertCircle size={48} className="mx-auto text-slate-200 mb-4" />
-             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No matching resources found</p>
-          </div>
-        ) : books.map((book: any) => (
-          <div key={book.id} className="bg-white rounded-[2rem] border-2 border-slate-50 shadow-sm p-6 hover:border-indigo-100 transition-all group flex flex-col">
-            <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
-              <Book size={24} />
-            </div>
-            <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight line-clamp-2 leading-tight flex-1">{book.title}</h4>
-            <p className="text-[10px] text-slate-400 font-mono mt-2 uppercase tracking-widest">ISBN: {book.isbn}</p>
-            
-            <div className="mt-6 flex items-center justify-between gap-3">
-               <button 
-                 onClick={() => setSelectedBook(book)}
-                 className="flex-1 py-3 bg-slate-50 text-slate-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all"
-               >
-                 View Details
-               </button>
-               <button 
-                 onClick={() => handleReserve(book.id)}
-                 disabled={book.state.type !== 'PUBLISHED' || reserving}
-                 className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-50 disabled:shadow-none"
-               >
-                 <Bookmark size={18} />
-               </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <Modal
-        isOpen={!!selectedBook}
-        onClose={() => setSelectedBook(null)}
-        title="Resource Forensics"
-        subtitle="Detailed publication data and availability status"
-      >
-        {selectedBook && (
-          <div className="space-y-6">
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-               <h5 className="font-black text-slate-900 uppercase tracking-tight text-xl mb-2">{selectedBook.title}</h5>
-               <p className="text-sm text-slate-600 leading-relaxed font-medium">{selectedBook.description || 'No digital abstract available for this resource.'}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-               <div className="p-4 bg-white rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
-                  <div className="flex items-center gap-2">
-                     <span className={`w-2 h-2 rounded-full ${selectedBook.state.type === 'PUBLISHED' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
-                     <p className="text-xs font-black text-slate-900 uppercase">{selectedBook.state.type}</p>
-                  </div>
-               </div>
-               <div className="p-4 bg-white rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Registry Code</p>
-                  <p className="text-xs font-bold text-slate-900 font-mono">{selectedBook.isbn}</p>
-               </div>
-            </div>
-
-            <div className="p-6 bg-slate-900 rounded-2xl text-white">
-               <div className="flex items-center gap-2 mb-4 text-indigo-400">
-                  <CheckCircle size={18} />
-                  <h4 className="text-[11px] font-black uppercase tracking-widest">Acquisition Protocol</h4>
-               </div>
-               <button 
-                 onClick={() => handleReserve(selectedBook.id)}
-                 disabled={selectedBook.state.type !== 'PUBLISHED' || reserving}
-                 className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50"
-               >
-                 {reserving ? 'Processing...' : 'Reserve for Collection'}
-               </button>
-            </div>
+      {/* Results */}
+      <div className="space-y-6">
+        {!called && !loading && (
+          <div className="p-20 text-center border-2 border-dashed border-slate-100 rounded-[3rem] space-y-4">
+             <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto">
+                <Bookmark className="text-slate-200" size={48} />
+             </div>
+             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Enter parameters to begin discovery</p>
           </div>
         )}
-      </Modal>
+
+        {loading && (
+           <div className="flex flex-col items-center justify-center p-20 space-y-4">
+              <Loader2 className="animate-spin text-indigo-600" size={40} />
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Scanning Federated Nodes...</p>
+           </div>
+        )}
+
+        {called && !loading && data?.searchBooks?.length === 0 && (
+           <div className="p-20 text-center bg-slate-50 rounded-[3rem] border border-slate-100 space-y-4">
+              <Info className="text-slate-400 mx-auto" size={32} />
+              <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">No matching assets found in registry</p>
+           </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-4">
+          {data?.searchBooks?.map((book: Book) => (
+            <div key={book.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-6 group hover:border-indigo-300 transition-all card-tactile">
+              <div className="bg-slate-50 p-6 rounded-2xl text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors self-start md:self-center">
+                <BookIcon size={32} />
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center space-x-2">
+                  <h4 className="text-xl font-black text-slate-900 tracking-tighter uppercase">{book.title}</h4>
+                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${
+                    book.state?.type === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'
+                  }`}>
+                    {book.state?.type}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-500">
+                  <div className="flex items-center space-x-1"><Hash size={14} className="text-slate-300" /> <span>{book.isbn}</span></div>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed line-clamp-2 max-w-2xl">{book.description || 'No digital summary available for this asset.'}</p>
+              </div>
+              <div className="flex md:flex-col gap-2">
+                <button className="flex-1 md:flex-none px-6 py-3 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest text-[10px] btn-tactile">
+                  Request Access
+                </button>
+                <button className="flex-1 md:flex-none px-6 py-3 bg-slate-50 text-slate-600 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-colors flex items-center justify-center space-x-2">
+                   <ExternalLink size={12} />
+                   <span>Details</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
